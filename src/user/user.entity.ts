@@ -11,6 +11,10 @@ export class User {
   lastName: string;
   @Column()
   email: string;
+  @Column({ default: false })
+  isRegistrationFinished: boolean;
+  @Column({ default: false })
+  isActive: boolean;
   @Column()
   cognitoId: string;
   @ManyToOne(() => Admin, (admin) => admin.users)

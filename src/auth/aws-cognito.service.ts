@@ -9,6 +9,7 @@ import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
 import { UserService } from 'src/user/user.service';
 import { AdminService } from 'src/admin/admin.service';
+import { InviteService } from '../invite/invite.service';
 
 @Injectable()
 export class AwsCognitoService {
@@ -18,6 +19,7 @@ export class AwsCognitoService {
     // inject service,
     private userService: UserService,
     private adminService: AdminService,
+    private inviteService: InviteService,
   ) {
     this.userPool = new CognitoUserPool({
       UserPoolId: process.env.AWS_COGNITO_USER_POOL_ID,
@@ -60,7 +62,12 @@ export class AwsCognitoService {
   }
 
   async registerUser(authRegisterUserDto: SignUpDto) {
-    const { firstName, lastName, email, password } = authRegisterUserDto;
+    const { firstName, lastName, email, password, inviteCode } =
+      authRegisterUserDto;
+
+    // Check valid invite and accept it
+    const invite = await this.inviteService.getInviteWithCode(inviteCode);
+    await this.inviteService.acceptInvite(invite.id);
 
     return new Promise((resolve, reject) => {
       this.userPool.signUp(
@@ -96,6 +103,7 @@ export class AwsCognitoService {
   async authenticateUser(authLoginUserDto: LoginDto): Promise<{
     accessToken: string;
     refreshToken: string;
+    userId: string;
   }> {
     const { email, password } = authLoginUserDto;
     const userData = {
@@ -116,6 +124,7 @@ export class AwsCognitoService {
           resolve({
             accessToken: result.getAccessToken().getJwtToken(),
             refreshToken: result.getRefreshToken().getToken(),
+            userId: result.getIdToken().payload.sub,
           });
         },
         onFailure: (err) => {

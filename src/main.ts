@@ -7,7 +7,7 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 
 async function bootstrap() {
   const corsOptions: CorsOptions = {
-    origin: 'http://localhost:3002',
+    origin: /localhost:300(1|2)/,
     credentials: true,
   };
 

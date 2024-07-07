@@ -8,5 +8,6 @@ import { DatabaseModule } from 'src/database/database.module';
   imports: [DatabaseModule],
   controllers: [InviteController],
   providers: [...inviteProviders, InviteService],
+  exports: [InviteService],
 })
 export class InviteModule {}

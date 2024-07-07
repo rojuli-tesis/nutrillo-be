@@ -18,6 +18,15 @@ export class Invite {
   })
   code: string;
   @Column({
+    type: 'timestamp',
+  })
+  expiresAt: Date;
+  @Column({
+    nullable: true,
+    type: 'timestamp',
+  })
+  acceptedAt: Date;
+  @Column({
     type: 'enum',
     enum: InviteStatus,
     default: InviteStatus.PENDING,

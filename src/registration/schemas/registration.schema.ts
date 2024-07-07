@@ -6,6 +6,7 @@ export interface PersonalData {
   lastName: string;
   dob: Date;
   objectives: string;
+  stepName: string;
 }
 
 export interface PhysicalActivity {
@@ -13,12 +14,14 @@ export interface PhysicalActivity {
   height: number;
   weight: number;
   diet: string;
+  stepName: string;
 }
 
 export interface HealthStatus {
   diagnosedSickness: string;
   medications: string;
   weightLossMedications: string;
+  stepName: string;
 }
 
 export interface DietDetails {
@@ -28,6 +31,7 @@ export interface DietDetails {
   sweeteners: string[];
   fats: string[];
   dairy: string[];
+  stepName: string;
 }
 
 export interface RoutineDetails {
@@ -46,6 +50,7 @@ export interface RoutineDetails {
   afternoonSnackDetails: string;
   dinnerTime: string;
   dinnerDetails: string;
+  stepName: string;
 }
 
 export interface ExtraDetails {
@@ -60,6 +65,16 @@ export interface ExtraDetails {
   alcohol: string;
   smoking: string;
   supplements: string;
+  stepName: string;
+}
+
+export enum RegistrationSteps {
+  PersonalData = 'personalData',
+  PhysicalActivity = 'physicalActivity',
+  HealthStatus = 'healthStatus',
+  DietDetails = 'dietDetails',
+  RoutineDetails = 'routineDetails',
+  ExtraDetails = 'extraDetails',
 }
 
 export type RegistrationStep =

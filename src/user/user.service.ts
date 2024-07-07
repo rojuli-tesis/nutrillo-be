@@ -17,4 +17,13 @@ export class UserService {
   async findByCognitoId(cognitoId: string): Promise<User> {
     return this.usersRepository.findOne({ where: { cognitoId } });
   }
+
+  async getUserAccessStatus(cognitoId: string): Promise<{
+    isRegistrationFinished: boolean;
+    isActive: boolean;
+  }> {
+    const { isRegistrationFinished, isActive } =
+      await this.findByCognitoId(cognitoId);
+    return { isRegistrationFinished, isActive };
+  }
 }

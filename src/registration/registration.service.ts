@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { CreateRegistrationDto } from './dto/create-registration.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Registration } from './schemas/registration.schema';
+import { Registration, RegistrationSteps } from './schemas/registration.schema';
 import { Model } from 'mongoose';
-import { UpdateRegistrationDto } from './dto/update-registration.dto';
+import { StoreRegistrationStepDto } from './dto/store-registration-step.dto';
 
 @Injectable()
 export class RegistrationService {
@@ -12,56 +11,68 @@ export class RegistrationService {
     private registrationModel: Model<Registration>,
   ) {}
 
-  /**
-   * First ever created registration for individual
-   * @param {CreateRegistrationDto} createRegistrationDto
-   * @returns {Registration}
-   */
-  startRegistration(
-    createRegistrationDto: CreateRegistrationDto,
-  ): Promise<Registration> {
+  async updateStep(
+    stepName: RegistrationSteps,
+    stepData: StoreRegistrationStepDto,
+    userId: number,
+  ) {
+    const existingRegistration = await this.registrationModel.findOne({
+      userId,
+    });
+    if (!existingRegistration) {
+      if (stepName !== RegistrationSteps.PersonalData) {
+        throw new BadRequestException();
+      }
+      await this.createRegistration(stepData, userId);
+    } else {
+      await this.updateRegistration(stepName, stepData, userId);
+    }
+  }
+
+  createRegistration(stepData: StoreRegistrationStepDto, userId: number) {
     const completeData = {
-      userId: createRegistrationDto.userId,
-      finished: false,
-      lastStep: 'personalData',
-      information: [createRegistrationDto.information],
+      userId,
+      finished: stepData.saveAndClose,
+      lastStep: RegistrationSteps.PersonalData,
+      information: [stepData.data],
     };
+
     return this.registrationModel.create(completeData);
   }
 
-  // /**
-  //  * Given a user id, returns their registration data
-  //  *
-  //  * @param {string} userId
-  //  * @returns {Registration}
-  //  */
-  // getRegistrationDataForUser(userId: string): Registration {
-  //   return this.registrations.find((reg) => reg.userId === userId);
-  // }
-
-  updateRegistration(updateRegistrationDto: UpdateRegistrationDto) {
+  updateRegistration(
+    step: RegistrationSteps,
+    updateRegistrationDto: StoreRegistrationStepDto,
+    userId: number,
+  ) {
+    const changeStep = step.replace('-', '/');
     return this.registrationModel.updateOne(
-      { userId: updateRegistrationDto.userId },
+      { userId },
       {
         $set: {
-          lastStep: updateRegistrationDto.step,
-          finished: updateRegistrationDto.finished,
+          lastStep: changeStep,
+          finished: updateRegistrationDto.saveAndClose,
         },
         $push: {
-          information: updateRegistrationDto.information,
+          information: updateRegistrationDto.data,
         },
       },
     );
   }
 
-  // // Individual finishes registration in whatever step they are
-  // setRegistrationAsFinished(userId: string) {
-  //   const registration = this.registrations.find(
-  //     (reg) => reg.userId === userId,
-  //   );
-  //   registration.finished = true;
-  // }
-
-  // Individual returns to a previous step in the registration process and changes data
-  updateRegistrationStep() {}
+  findForUser(userId: number) {
+    return this.registrationModel.findOne({ userId });
+  }
+  abandonProcess(userId: number) {
+    return this.registrationModel.updateOne(
+      {
+        userId,
+      },
+      {
+        $set: {
+          finished: true,
+        },
+      },
+    );
+  }
 }

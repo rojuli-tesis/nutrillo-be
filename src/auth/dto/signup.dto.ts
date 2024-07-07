@@ -12,6 +12,8 @@ export class SignUpDto {
   firstName: string;
   @IsString()
   lastName: string;
+  @IsString()
+  inviteCode: string;
 }
 
 export class createUserDto {

@@ -3,7 +3,7 @@ import { IsEmail, IsNotEmpty } from 'class-validator';
 export enum InviteStatus {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REVOKED',
+  REVOKED = 'REVOKED',
   EXPIRED = 'EXPIRED',
 }
 

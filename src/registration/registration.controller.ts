@@ -1,19 +1,43 @@
-import { Body, Controller, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { RegistrationService } from './registration.service';
-import { CreateRegistrationDto } from './dto/create-registration.dto';
-import { UpdateRegistrationDto } from './dto/update-registration.dto';
+import { StoreRegistrationStepDto } from './dto/store-registration-step.dto';
+import { RegistrationSteps } from './schemas/registration.schema';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('registration')
 export class RegistrationController {
   constructor(private registrationService: RegistrationService) {}
 
-  @Post()
-  startRegistration(@Body() createRegistrationDto: CreateRegistrationDto) {
-    return this.registrationService.startRegistration(createRegistrationDto);
+  @Post('/:step')
+  async saveRegistrationData(
+    @Param('step') registrationStep: RegistrationSteps,
+    @Body() registrationStepData: StoreRegistrationStepDto,
+    @Request() req: Express.Request,
+  ) {
+    await this.registrationService.updateStep(
+      registrationStep,
+      registrationStepData,
+      req.user.userId,
+    );
   }
 
-  @Put()
-  updateRegistration(@Body() updateRegistrationDto: UpdateRegistrationDto) {
-    return this.registrationService.updateRegistration(updateRegistrationDto);
+  @Get()
+  async retrieveUserRegistration(@Request() req: Express.Request) {
+    return this.registrationService.findForUser(req.user.userId);
+  }
+
+  @Patch('/abandoned')
+  async abandonRegistration(@Request() req: Express.Request) {
+    await this.registrationService.abandonProcess(req.user.userId);
   }
 }
