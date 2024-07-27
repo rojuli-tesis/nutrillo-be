@@ -1,4 +1,5 @@
 import { IsEmail, IsString, Matches } from 'class-validator';
+import { Admin } from '../../admin/admin.entity';
 
 export class SignUpDto {
   @IsEmail()
@@ -20,6 +21,7 @@ export class createUserDto {
   email: string;
   firstName: string;
   lastName: string;
+  admin: Admin;
 }
 
 export class createAdminDto {

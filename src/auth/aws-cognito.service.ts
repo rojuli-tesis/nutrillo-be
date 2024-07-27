@@ -92,7 +92,9 @@ export class AwsCognitoService {
               email,
               firstName,
               lastName,
+              admin: invite.admin,
             });
+
             resolve(result.user);
           }
         },

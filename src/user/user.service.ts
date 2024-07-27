@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { createUserDto } from 'src/auth/dto/signup.dto';
@@ -11,7 +11,13 @@ export class UserService {
   ) {}
 
   async create(cognitoId: string, user: createUserDto): Promise<User> {
-    return this.usersRepository.save({ cognitoId, ...user });
+    return this.usersRepository.save({ cognitoId, isActive: true, ...user });
+  }
+
+  async markRegistrationComplete(userId: number) {
+    return this.usersRepository.update(userId, {
+      isRegistrationFinished: true,
+    });
   }
 
   async findByCognitoId(cognitoId: string): Promise<User> {

@@ -14,6 +14,10 @@ export class AdminService {
     return !!admin;
   }
 
+  async findById(id: number): Promise<Admin> {
+    return this.adminRepository.findOneBy({ id });
+  }
+
   async findByCognitoId(cognitoId: string): Promise<Admin> {
     return this.adminRepository.findOne({ where: { cognitoId } });
   }

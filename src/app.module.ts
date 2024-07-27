@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { InviteModule } from './invite/invite.module';
+import { PatientModule } from './patient/patient.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { InviteModule } from './invite/invite.module';
     UserModule,
     AdminModule,
     InviteModule,
+    PatientModule,
   ],
   providers: [],
 })

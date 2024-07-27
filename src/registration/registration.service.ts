@@ -63,6 +63,7 @@ export class RegistrationService {
   findForUser(userId: number) {
     return this.registrationModel.findOne({ userId });
   }
+
   abandonProcess(userId: number) {
     return this.registrationModel.updateOne(
       {
