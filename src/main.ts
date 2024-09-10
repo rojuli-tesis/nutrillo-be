@@ -6,15 +6,19 @@ import * as dotenv from 'dotenv';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 async function bootstrap() {
+  dotenv.config();
+  const port = process.env.PORT || 4000;
+
   const corsOptions: CorsOptions = {
-    origin: /localhost:300(1|2)/,
+    origin: /localhost:300(0|1)/,
     credentials: true,
   };
 
-  dotenv.config();
   const app = await NestFactory.create(AppModule, { cors: corsOptions });
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
-  await app.listen(3000);
+  await app.listen(port);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
+
 bootstrap();
