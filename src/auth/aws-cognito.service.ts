@@ -160,7 +160,7 @@ export class AwsCognitoService {
           const adminIsValid =
             await this.adminService.checkAdminByCognitoId(cognitoId);
           if (!adminIsValid) {
-            reject({ message: 'User is not an admin' });
+            reject({ message: 'Usuario no es administrador' });
           } else {
             resolve({
               accessToken: result.getAccessToken().getJwtToken(),
@@ -169,7 +169,7 @@ export class AwsCognitoService {
           }
         },
         onFailure: (err) => {
-          reject(err);
+          reject('Usuario no encontrado');
         },
       });
     });

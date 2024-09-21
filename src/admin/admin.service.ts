@@ -10,12 +10,10 @@ export class AdminService {
     private adminRepository: Repository<Admin>,
   ) {}
   async checkAdminByCognitoId(cognitoId: string): Promise<boolean> {
-    const admin = await this.adminRepository.findOne({ where: { cognitoId } });
+    const admin = await this.adminRepository.findOne({
+      where: { cognitoId, enabled: true },
+    });
     return !!admin;
-  }
-
-  async findById(id: number): Promise<Admin> {
-    return this.adminRepository.findOneBy({ id });
   }
 
   async findByCognitoId(cognitoId: string): Promise<Admin> {
@@ -23,6 +21,10 @@ export class AdminService {
   }
 
   async create(cognitoId: string, adminData: createAdminDto): Promise<Admin> {
-    return this.adminRepository.save({ ...adminData, cognitoId });
+    return this.adminRepository.save({
+      ...adminData,
+      cognitoId,
+      enabled: true,
+    });
   }
 }

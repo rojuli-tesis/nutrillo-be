@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Matches } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Matches } from 'class-validator';
 import { Admin } from '../../admin/admin.entity';
 
 export class SignUpDto {
@@ -14,6 +14,7 @@ export class SignUpDto {
   @IsString()
   lastName: string;
   @IsString()
+  @IsOptional()
   inviteCode: string;
 }
 

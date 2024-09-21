@@ -30,12 +30,16 @@ export class AdminController {
     })
     res: Response,
   ) {
-    const result =
-      await this.awsCognitoService.authenticateAdmin(authLoginUserDto);
-    res.cookie('jwt', result.accessToken, {
-      httpOnly: true,
-      secure: true,
-    });
-    return result;
+    try {
+      const result =
+        await this.awsCognitoService.authenticateAdmin(authLoginUserDto);
+      res.cookie('jwt', result.accessToken, {
+        httpOnly: true,
+        secure: true,
+      });
+      return result;
+    } catch (e) {
+      return res.status(401).send(e.message);
+    }
   }
 }
