@@ -169,7 +169,51 @@ export class AwsCognitoService {
           }
         },
         onFailure: (err) => {
-          reject('Usuario no encontrado');
+          reject({ message: 'Email o contraseña incorrectos' });
+        },
+      });
+    });
+  }
+
+  async initiateForgotPassword(email: string) {
+    return new Promise((resolve, reject) => {
+      const userData = {
+        Username: email,
+        Pool: this.userPool,
+      };
+      const cognitoUser = new CognitoUser(userData);
+      cognitoUser.forgotPassword({
+        onSuccess: () => {
+          resolve({
+            message: 'Se envió un correo con las instrucciones',
+          });
+        },
+        onFailure: (err) => {
+          reject({ message: err });
+        },
+      });
+    });
+  }
+
+  async confirmForgotPassword(
+    email: string,
+    code: string,
+    newPassword: string,
+  ) {
+    return new Promise((resolve, reject) => {
+      const userData = {
+        Username: email,
+        Pool: this.userPool,
+      };
+      const cognitoUser = new CognitoUser(userData);
+      cognitoUser.confirmPassword(code, newPassword, {
+        onSuccess: () => {
+          resolve({
+            message: 'Contraseña actualizada',
+          });
+        },
+        onFailure: (err) => {
+          reject({ message: err });
         },
       });
     });

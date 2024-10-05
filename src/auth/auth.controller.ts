@@ -55,4 +55,22 @@ export class AuthController {
     console.log(nextPath);
     return nextPath;
   }
+
+  @Post('/forgot-password')
+  @UsePipes(ValidationPipe)
+  async forgotPassword(@Body() data: { email: string }) {
+    return await this.awsCognitoService.initiateForgotPassword(data.email);
+  }
+
+  @Post('/reset-password')
+  @UsePipes(ValidationPipe)
+  async resetPassword(
+    @Body() data: { email: string; code: string; newPassword: string },
+  ) {
+    return await this.awsCognitoService.confirmForgotPassword(
+      data.email,
+      data.code,
+      data.newPassword,
+    );
+  }
 }
