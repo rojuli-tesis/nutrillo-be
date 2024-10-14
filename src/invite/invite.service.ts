@@ -65,7 +65,14 @@ export class InviteService {
       where: {
         code,
       },
+      relations: ['admin'],
+      select: {
+        admin: {
+          id: true,
+        },
+      },
     });
+
     if (!invite) {
       throw new NotFoundException();
     }

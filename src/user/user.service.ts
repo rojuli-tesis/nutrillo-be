@@ -11,7 +11,13 @@ export class UserService {
   ) {}
 
   async create(cognitoId: string, user: createUserDto): Promise<User> {
-    return this.usersRepository.save({ cognitoId, isActive: true, ...user });
+    const userCreated = await this.usersRepository.save({
+      cognitoId,
+      isActive: true,
+      ...user,
+    });
+    // need to save adminID
+    return userCreated;
   }
 
   async markRegistrationComplete(userId: number) {
