@@ -37,9 +37,9 @@ export class AdminController {
         httpOnly: true,
         secure: true,
       });
-      return result;
+      res.status(200).json({ message: 'Login successful' });
     } catch (e) {
-      return res.status(401).send(e.message);
+      res.status(401).send({ message: 'Email o contraseña incorrectos' });
     }
   }
 }

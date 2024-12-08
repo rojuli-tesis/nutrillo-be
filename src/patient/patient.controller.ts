@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RegistrationService } from '../registration/registration.service';
 import { PatientService } from './patient.service';
@@ -18,5 +26,15 @@ export class PatientController {
     const patient = await this.patientService.getPatient(userId);
     const registration = await this.patientService.findUserRegistration(userId);
     return { ...patient, registration };
+  }
+
+  @Patch('/:userId/registration-notes')
+  async updateRegistration(
+    @Param('userId') userId: number,
+    @Body('notes') notes: string,
+    @Body('section') section?: string,
+  ) {
+    await this.patientService.saveRegistrationNotes(userId, notes, section);
+    return { success: true };
   }
 }

@@ -33,4 +33,22 @@ export class PatientService {
   async findUserRegistration(userId: number) {
     return this.registrationModel.findOne({ userId });
   }
+
+  async saveRegistrationNotes(userId: number, notes: string, section?: string) {
+    const registration = await this.registrationModel.findOne({ userId });
+    if (!registration) {
+      throw new NotFoundException('Registration not found');
+    }
+    if (section) {
+      registration.information = registration.information.map((step) => {
+        if (step.stepName === section) {
+          return { ...step, notes };
+        }
+        return step;
+      });
+    } else {
+      registration.notes = notes;
+    }
+    await registration.save();
+  }
 }

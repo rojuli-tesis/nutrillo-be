@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import {
   AuthenticationDetails,
   CognitoUser,
@@ -153,26 +153,31 @@ export class AwsCognitoService {
 
     const userCognito = new CognitoUser(userData);
 
-    return new Promise((resolve, reject) => {
-      userCognito.authenticateUser(authenticationDetails, {
-        onSuccess: async (result) => {
-          const cognitoId = result.getIdToken().payload.sub;
-          const adminIsValid =
-            await this.adminService.checkAdminByCognitoId(cognitoId);
-          if (!adminIsValid) {
-            reject({ message: 'Usuario no es administrador' });
-          } else {
-            resolve({
-              accessToken: result.getAccessToken().getJwtToken(),
-              refreshToken: result.getRefreshToken().getToken(),
-            });
-          }
-        },
-        onFailure: (err) => {
-          reject({ message: 'Email o contraseña incorrectos' });
-        },
+    try {
+      return new Promise((resolve, reject) => {
+        userCognito.authenticateUser(authenticationDetails, {
+          onSuccess: async (result) => {
+            const cognitoId = result.getIdToken().payload.sub;
+            const adminIsValid =
+              await this.adminService.checkAdminByCognitoId(cognitoId);
+            if (!adminIsValid) {
+              reject({ message: 'Usuario no es administrador' });
+            } else {
+              resolve({
+                accessToken: result.getAccessToken().getJwtToken(),
+                refreshToken: result.getRefreshToken().getToken(),
+              });
+            }
+          },
+          onFailure: (err) => {
+            reject({ message: 'Email o contraseña incorrectos' });
+          },
+        });
       });
-    });
+    } catch (e) {
+      console.error(e);
+      throw UnauthorizedException;
+    }
   }
 
   async initiateForgotPassword(email: string) {

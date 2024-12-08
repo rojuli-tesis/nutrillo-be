@@ -1,7 +1,11 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
-export interface PersonalData {
+interface StepBase {
+  notes: string;
+}
+
+export interface PersonalData extends StepBase {
   firstName: string;
   lastName: string;
   dob: Date;
@@ -9,7 +13,7 @@ export interface PersonalData {
   stepName: string;
 }
 
-export interface PhysicalActivity {
+export interface PhysicalActivity extends StepBase {
   intensity: string;
   height: number;
   weight: number;
@@ -17,14 +21,14 @@ export interface PhysicalActivity {
   stepName: string;
 }
 
-export interface HealthStatus {
+export interface HealthStatus extends StepBase {
   diagnosedSickness: string;
   medications: string;
   weightLossMedications: string;
   stepName: string;
 }
 
-export interface DietDetails {
+export interface DietDetails extends StepBase {
   liquids: string[];
   sweets: string[];
   snacks: string[];
@@ -34,7 +38,7 @@ export interface DietDetails {
   stepName: string;
 }
 
-export interface RoutineDetails {
+export interface RoutineDetails extends StepBase {
   mealsADay: number;
   householdShopper: string;
   starvingHours: string;
@@ -53,7 +57,7 @@ export interface RoutineDetails {
   stepName: string;
 }
 
-export interface ExtraDetails {
+export interface ExtraDetails extends StepBase {
   sedentaryLevel: string;
   workouts: {
     type: string;
@@ -97,6 +101,8 @@ export class Registration {
   lastStep: string;
   @Prop()
   finished: boolean;
+  @Prop()
+  notes: string;
 }
 
 export const RegistrationSchema = SchemaFactory.createForClass(Registration);
