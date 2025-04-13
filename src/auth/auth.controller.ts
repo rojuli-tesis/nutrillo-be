@@ -5,6 +5,8 @@ import {
   Res,
   UsePipes,
   ValidationPipe,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { AwsCognitoService } from './aws-cognito.service';
 import { SignUpDto } from './dto/signup.dto';

@@ -5,6 +5,8 @@ import {
   Res,
   UsePipes,
   ValidationPipe,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AwsCognitoService } from 'src/auth/aws-cognito.service';
@@ -18,7 +20,15 @@ export class AdminController {
   @Post('/signup')
   @UsePipes(ValidationPipe)
   async register(@Body() authRegisterUserDto: SignUpDto) {
-    return await this.awsCognitoService.registerAdmin(authRegisterUserDto);
+    try {
+      return await this.awsCognitoService.registerAdmin(authRegisterUserDto);
+    } catch (error) {
+      console.error('Admin registration error:', error);
+      throw new HttpException(
+        error.message || 'Error al registrar el administrador',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   @Post('/login')
