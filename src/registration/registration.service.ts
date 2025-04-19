@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Registration, RegistrationSteps } from './schemas/registration.schema';
 import { Model } from 'mongoose';
@@ -11,69 +11,151 @@ export class RegistrationService {
     private registrationModel: Model<Registration>,
   ) {}
 
+  /**
+   * Updates a registration step for a user
+   * @param stepName The name of the step to update
+   * @param stepData The data for the step
+   * @param userId The ID of the user
+   * @returns The updated registration
+   */
   async updateStep(
     stepName: RegistrationSteps,
     stepData: StoreRegistrationStepDto,
     userId: number,
-  ) {
-    const existingRegistration = await this.registrationModel.findOne({
-      userId,
-    });
-    if (!existingRegistration) {
-      if (stepName !== RegistrationSteps.PersonalData) {
-        throw new BadRequestException();
+  ): Promise<Registration> {
+    try {
+      const existingRegistration = await this.registrationModel.findOne({
+        userId,
+      });
+
+      if (!existingRegistration) {
+        if (stepName !== RegistrationSteps.PersonalData) {
+          throw new BadRequestException(
+            'Registration must start with personal data step',
+          );
+        }
+        return await this.createRegistration(stepData, userId);
+      } else {
+        return await this.updateRegistration(stepName, stepData, userId);
       }
-      await this.createRegistration(stepData, userId);
-    } else {
-      await this.updateRegistration(stepName, stepData, userId);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        `Failed to update registration step: ${error.message}`,
+      );
     }
   }
 
-  createRegistration(stepData: StoreRegistrationStepDto, userId: number) {
-    const completeData = {
-      userId,
-      finished: stepData.saveAndClose,
-      lastStep: RegistrationSteps.PersonalData,
-      information: [stepData.data],
-    };
+  /**
+   * Creates a new registration for a user
+   * @param stepData The data for the first step
+   * @param userId The ID of the user
+   * @returns The created registration
+   */
+  async createRegistration(
+    stepData: StoreRegistrationStepDto,
+    userId: number,
+  ): Promise<Registration> {
+    try {
+      const completeData = {
+        userId,
+        finished: stepData.saveAndClose || false,
+        lastStep: RegistrationSteps.PersonalData,
+        information: [stepData.data],
+      };
 
-    return this.registrationModel.create(completeData);
+      return await this.registrationModel.create(completeData);
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to create registration: ${error.message}`,
+      );
+    }
   }
 
-  updateRegistration(
+  /**
+   * Updates an existing registration for a user
+   * @param step The step to update
+   * @param updateRegistrationDto The data for the step
+   * @param userId The ID of the user
+   * @returns The updated registration
+   */
+  async updateRegistration(
     step: RegistrationSteps,
     updateRegistrationDto: StoreRegistrationStepDto,
     userId: number,
-  ) {
-    const changeStep = step.replace('-', '/');
-    return this.registrationModel.updateOne(
-      { userId },
-      {
-        $set: {
-          lastStep: changeStep,
-          finished: updateRegistrationDto.saveAndClose,
+  ): Promise<Registration> {
+    try {
+      const result = await this.registrationModel.findOneAndUpdate(
+        { userId },
+        {
+          $set: {
+            lastStep: step,
+            finished: updateRegistrationDto.saveAndClose || false,
+          },
+          $push: {
+            information: updateRegistrationDto.data,
+          },
         },
-        $push: {
-          information: updateRegistrationDto.data,
-        },
-      },
-    );
+        { new: true },
+      );
+
+      if (!result) {
+        throw new NotFoundException(`Registration not found for user ${userId}`);
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        `Failed to update registration: ${error.message}`,
+      );
+    }
   }
 
-  findForUser(userId: number) {
-    return this.registrationModel.findOne({ userId });
+  /**
+   * Finds a registration for a user
+   * @param userId The ID of the user
+   * @returns The registration for the user
+   */
+  async findForUser(userId: number): Promise<Registration | null> {
+    try {
+      return await this.registrationModel.findOne({ userId });
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to find registration: ${error.message}`,
+      );
+    }
   }
 
-  abandonProcess(userId: number) {
-    return this.registrationModel.updateOne(
-      {
-        userId,
-      },
-      {
-        $set: {
-          finished: true,
-        },
-      },
-    );
+  /**
+   * Marks a registration as abandoned
+   * @param userId The ID of the user
+   * @returns The updated registration
+   */
+  async abandonProcess(userId: number): Promise<Registration> {
+    try {
+      const result = await this.registrationModel.findOneAndUpdate(
+        { userId },
+        { $set: { finished: true } },
+        { new: true },
+      );
+
+      if (!result) {
+        throw new NotFoundException(`Registration not found for user ${userId}`);
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        `Failed to abandon registration: ${error.message}`,
+      );
+    }
   }
 }

@@ -91,16 +91,20 @@ export type RegistrationStep =
 
 export type RegistrationDocument = HydratedDocument<Registration>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Registration {
-  @Prop()
+  @Prop({ required: true, index: true })
   userId: string;
-  @Prop()
+
+  @Prop({ type: [Object], required: true })
   information: RegistrationStep[];
-  @Prop()
-  lastStep: string;
-  @Prop()
+
+  @Prop({ required: true, enum: RegistrationSteps })
+  lastStep: RegistrationSteps;
+
+  @Prop({ default: false })
   finished: boolean;
+
   @Prop()
   notes: string;
 }

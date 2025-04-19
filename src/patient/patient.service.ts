@@ -20,6 +20,12 @@ export class PatientService {
     });
   }
 
+  async getPatientCount(userId: number): Promise<number> {
+    return this.usersRepository.count({
+      where: { admin: { id: userId } },
+    });
+  }
+
   async getPatient(userId: number): Promise<Partial<User>> {
     const user = await this.usersRepository.findOneBy({ id: userId });
     if (!user) {

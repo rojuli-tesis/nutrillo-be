@@ -21,6 +21,12 @@ export class PatientController {
     return this.patientService.listPatients(req.user.userId);
   }
 
+  @Get('/count')
+  async getPatientCount(@Request() req: Express.Request) {
+    const count = await this.patientService.getPatientCount(req.user.userId);
+    return { count };
+  }
+
   @Get('/:userId')
   async retrievePatient(@Param('userId') userId: number) {
     const patient = await this.patientService.getPatient(userId);
