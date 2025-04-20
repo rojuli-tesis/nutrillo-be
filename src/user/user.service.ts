@@ -30,6 +30,10 @@ export class UserService {
     return this.usersRepository.findOne({ where: { cognitoId } });
   }
 
+  async getUserById(userId: number): Promise<User> {
+    return this.usersRepository.findOne({ where: { id: userId } });
+  }
+
   async getUserAccessStatus(cognitoId: string): Promise<{
     isRegistrationFinished: boolean;
     isActive: boolean;

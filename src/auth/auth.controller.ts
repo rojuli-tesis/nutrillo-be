@@ -5,12 +5,16 @@ import {
   Res,
   UsePipes,
   ValidationPipe,
+  Get,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { AwsCognitoService } from './aws-cognito.service';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
 import { UserService } from '../user/user.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -50,10 +54,19 @@ export class AuthController {
     } else {
       if (!accessStatus.isActive) {
         nextPath = '/inactive';
+      } else {
+        nextPath = '/home';
       }
     }
     console.log(nextPath);
     return nextPath;
+  }
+
+  @Get('/me')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Request() req) {
+    const user = await this.userService.getUserById(req.user.userId);
+    return { userId: req.user.userId, firstName: user.firstName };
   }
 
   @Post('/forgot-password')
