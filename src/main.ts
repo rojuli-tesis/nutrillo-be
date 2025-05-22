@@ -2,23 +2,22 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import * as dotenv from 'dotenv';
-import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 async function bootstrap() {
-  dotenv.config();
-  const port = process.env.PORT || 4000;
-
-  const corsOptions: CorsOptions = {
-    origin: /localhost:300(0|1)/,
+  const app = await NestFactory.create(AppModule);
+  
+  // Enable CORS
+  app.enableCors({
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
-  };
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  });
 
-  const app = await NestFactory.create(AppModule, { cors: corsOptions });
-  app.useGlobalPipes(new ValidationPipe());
+  // Add cookie parser middleware
   app.use(cookieParser());
-  await app.listen(port);
-  console.log(`Application is running on: ${await app.getUrl()}`);
-}
 
+  app.useGlobalPipes(new ValidationPipe());
+  await app.listen(4000);
+}
 bootstrap();

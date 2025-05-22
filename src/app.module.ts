@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { InviteModule } from './invite/invite.module';
 import { PatientModule } from './patient/patient.module';
+import { FoodLogModule } from './food-log/food-log.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
 
@@ -31,6 +32,7 @@ const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
     AdminModule,
     InviteModule,
     PatientModule,
+    FoodLogModule,
   ],
   providers: [],
 })

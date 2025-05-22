@@ -4,22 +4,21 @@ FROM node:18.13.0-alpine
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and yarn.lock
-COPY package.json yarn.lock ./
+# Copy package files
+COPY package*.json yarn.lock ./
 
 # Install dependencies using Yarn
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
 
-# Copy the wait-for-it.sh script from the root folder
-#COPY ../wait-for-it.sh /usr/local/bin/wait-for-it.sh
-#RUN chmod +x /usr/local/bin/wait-for-it.sh
-
 # Build arguments for environment
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
+
+# Install dependencies again to catch any newly added packages
+RUN yarn install --frozen-lockfile
 
 # Conditionally run the build step based on the environment
 RUN if [ "$NODE_ENV" = "production" ]; then yarn build; fi
