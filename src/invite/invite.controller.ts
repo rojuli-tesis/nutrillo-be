@@ -17,6 +17,13 @@ import { Invite } from './invite.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Public } from '../auth/public.decorator';
 
+interface JwtUser {
+  cognitoId: string;
+  username: string;
+  isAdmin: boolean;
+  userId: number;
+}
+
 @UseGuards(JwtAuthGuard)
 @Controller('invite')
 export class InviteController {
@@ -26,14 +33,14 @@ export class InviteController {
   @UsePipes(ValidationPipe)
   async createInvite(
     @Body() inviteDto: CreateInviteDto,
-    @Request() req: Express.Request,
+    @Request() req: Express.Request & { user: JwtUser },
   ) {
     return await this.inviteService.create(inviteDto, req.user.userId);
   }
 
   @Get()
   async getAllInvites(
-    @Request() req: Express.Request,
+    @Request() req: Express.Request & { user: JwtUser },
     @Query('status') status?: InviteStatus,
   ): Promise<Invite[]> {
     await this.inviteService.expireInvites(req.user.userId);
@@ -43,13 +50,13 @@ export class InviteController {
   @Patch(':id/extend')
   async extendExpired(
     @Param('id') id: number,
-    @Request() req: Express.Request,
+    @Request() req: Express.Request & { user: JwtUser },
   ) {
     return await this.inviteService.extendInvite(id, req.user.userId);
   }
 
   @Patch(':id/revoke')
-  async revoke(@Param('id') id: number, @Request() req: Express.Request) {
+  async revoke(@Param('id') id: number, @Request() req: Express.Request & { user: JwtUser }) {
     return await this.inviteService.revokeInvite(id, req.user.userId);
   }
 

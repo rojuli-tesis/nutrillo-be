@@ -8,8 +8,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RegistrationService } from '../registration/registration.service';
 import { PatientService } from './patient.service';
+
+interface JwtUser {
+  cognitoId: string;
+  username: string;
+  isAdmin: boolean;
+  userId: number;
+}
 
 @UseGuards(JwtAuthGuard)
 @Controller('patient')
@@ -17,12 +23,12 @@ export class PatientController {
   constructor(private patientService: PatientService) {}
 
   @Get()
-  listAllPatients(@Request() req: Express.Request) {
+  listAllPatients(@Request() req: Express.Request & { user: JwtUser }) {
     return this.patientService.listPatients(req.user.userId);
   }
 
   @Get('/count')
-  async getPatientCount(@Request() req: Express.Request) {
+  async getPatientCount(@Request() req: Express.Request & { user: JwtUser }) {
     const count = await this.patientService.getPatientCount(req.user.userId);
     return { count };
   }

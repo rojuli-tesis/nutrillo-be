@@ -9,9 +9,9 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { AwsCognitoService } from 'src/auth/aws-cognito.service';
-import { LoginDto } from 'src/auth/dto/login.dto';
-import { SignUpDto } from 'src/auth/dto/signup.dto';
+import { AwsCognitoService } from '../auth/aws-cognito.service';
+import { LoginDto } from '../auth/dto/login.dto';
+import { SignUpDto } from '../auth/dto/signup.dto';
 
 @Controller('admin')
 export class AdminController {

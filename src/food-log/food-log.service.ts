@@ -76,6 +76,7 @@ export class FoodLogService {
 
   async createMealLog(
     userId: number,
+    adminId: string,
     mealData: {
       date: string;
       mealType: string;
@@ -96,7 +97,8 @@ export class FoodLogService {
     if (mealData.photo) {
       try {
         this.logger.log('Uploading photo to S3...');
-        photoUrl = await this.s3Service.uploadFile(mealData.photo);
+        const path = `${adminId}/patients/${userId}/logs`;
+        photoUrl = await this.s3Service.uploadFile(mealData.photo, path);
         this.logger.log('Photo uploaded successfully:', photoUrl);
       } catch (error) {
         this.logger.error('Failed to upload photo:', error);

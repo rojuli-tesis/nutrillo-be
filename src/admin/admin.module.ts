@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AdminController } from './admin.controller';
+import { AwsCognitoService } from '../auth/aws-cognito.service';
+import { DatabaseModule } from '../database/database.module';
+import { UserModule } from '../user/user.module';
 import { AdminService } from './admin.service';
-import { AwsCognitoService } from 'src/auth/aws-cognito.service';
+import { AdminController } from './admin.controller';
 import { adminProviders } from './admin.providers';
-import { DatabaseModule } from 'src/database/database.module';
-import { UserModule } from 'src/user/user.module';
 import { InviteModule } from '../invite/invite.module';
 
 @Module({

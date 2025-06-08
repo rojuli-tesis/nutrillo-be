@@ -9,6 +9,8 @@ import { AdminModule } from './admin/admin.module';
 import { InviteModule } from './invite/invite.module';
 import { PatientModule } from './patient/patient.module';
 import { FoodLogModule } from './food-log/food-log.module';
+import { NutritionPlanModule } from './nutrition-plan/nutrition-plan.module';
+import { PlateIngredientModule } from './plate-ingredient/plate-ingredient.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
 
@@ -33,7 +35,9 @@ const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
     InviteModule,
     PatientModule,
     FoodLogModule,
+    NutritionPlanModule,
+    PlateIngredientModule,
   ],
   providers: [],
 })
-export class AppModule { }
+export class AppModule {}

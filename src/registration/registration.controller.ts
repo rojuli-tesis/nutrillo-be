@@ -16,6 +16,13 @@ import { Registration, RegistrationSteps } from './schemas/registration.schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserService } from '../user/user.service';
 
+interface JwtUser {
+  cognitoId: string;
+  username: string;
+  isAdmin: boolean;
+  userId: number;
+}
+
 @UseGuards(JwtAuthGuard)
 @Controller('registration')
 export class RegistrationController {
@@ -36,7 +43,7 @@ export class RegistrationController {
   async saveRegistrationData(
     @Param('step') registrationStep: RegistrationSteps,
     @Body() registrationStepData: StoreRegistrationStepDto,
-    @Request() req: Express.Request,
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<Registration> {
     const registration = await this.registrationService.updateStep(
       registrationStep,
@@ -58,7 +65,7 @@ export class RegistrationController {
    */
   @Get()
   @HttpCode(HttpStatus.OK)
-  async retrieveUserRegistration(@Request() req: Express.Request): Promise<Registration | null> {
+  async retrieveUserRegistration(@Request() req: Express.Request & { user: JwtUser }): Promise<Registration | null> {
     return this.registrationService.findForUser(req.user.userId);
   }
 
@@ -69,7 +76,7 @@ export class RegistrationController {
    */
   @Patch('/abandoned')
   @HttpCode(HttpStatus.OK)
-  async abandonRegistration(@Request() req: Express.Request): Promise<Registration> {
+  async abandonRegistration(@Request() req: Express.Request & { user: JwtUser }): Promise<Registration> {
     return this.registrationService.abandonProcess(req.user.userId);
   }
 

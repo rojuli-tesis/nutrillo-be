@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { InviteStatus } from './dto/invite.dto';
-import { Admin } from 'src/admin/admin.entity';
+import { Admin } from '../admin/admin.entity';
 
 @Entity()
 export class Invite {

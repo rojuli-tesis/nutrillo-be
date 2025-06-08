@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Admin } from './admin.entity';
-import { createAdminDto } from 'src/auth/dto/signup.dto';
+import { createAdminDto } from '../auth/dto/signup.dto';
 
 @Injectable()
 export class AdminService {

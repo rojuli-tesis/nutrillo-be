@@ -19,10 +19,13 @@ export class S3Service {
     this.bucketName = this.configService.get<string>('AWS_S3_BUCKET_NAME');
   }
 
-  async uploadFile(file: any): Promise<string> {
+  async uploadFile(file: any, path: string): Promise<string> {
     try {
       // Create a unique file name
-      const key = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
+      const fileName = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
+      
+      // Combine path and filename
+      const key = `${path}/${fileName}`;
       
       this.logger.log('Uploading file to S3:', {
         bucket: this.bucketName,

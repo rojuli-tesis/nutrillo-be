@@ -1,5 +1,5 @@
-import { Invite } from 'src/invite/invite.entity';
-import { User } from 'src/user/user.entity';
+import { Invite } from '../invite/invite.entity';
+import { User } from '../user/user.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()

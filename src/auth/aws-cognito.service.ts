@@ -8,8 +8,8 @@ import {
 } from 'amazon-cognito-identity-js';
 import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
-import { UserService } from 'src/user/user.service';
-import { AdminService } from 'src/admin/admin.service';
+import { UserService } from '../user/user.service';
+import { AdminService } from '../admin/admin.service';
 import { InviteService } from '../invite/invite.service';
 
 interface CognitoError extends Error {

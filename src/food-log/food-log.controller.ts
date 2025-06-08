@@ -47,10 +47,14 @@ export class FoodLogController {
       buffer: photo?.buffer ? 'Present' : 'Not present'
     });
     
-    return this.foodLogService.createMealLog(req.user?.userId || 1, {
-      ...mealData,
-      photo: photo,
-    });
+    return this.foodLogService.createMealLog(
+      req.user?.userId || 1,
+      req.user?.adminId,
+      {
+        ...mealData,
+        photo: photo,
+      }
+    );
   }
 
   @Post()
@@ -61,6 +65,11 @@ export class FoodLogController {
   @Get()
   findAll(@Request() req: any) {
     return this.foodLogService.findAll(req.user.userId);
+  }
+
+  @Get('patient/:patientId')
+  findAllByPatientId(@Request() req: any, @Param('patientId') patientId: string) {
+    return this.foodLogService.findAll(parseInt(patientId));
   }
 
   @Get('date')
