@@ -11,6 +11,7 @@ import { PatientModule } from './patient/patient.module';
 import { FoodLogModule } from './food-log/food-log.module';
 import { NutritionPlanModule } from './nutrition-plan/nutrition-plan.module';
 import { PlateIngredientModule } from './plate-ingredient/plate-ingredient.module';
+import { PlateEvaluatorModule } from './plate-evaluator/plate-evaluator.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
 
@@ -37,6 +38,7 @@ const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
     FoodLogModule,
     NutritionPlanModule,
     PlateIngredientModule,
+    PlateEvaluatorModule,
   ],
   providers: [],
 })
