@@ -4,6 +4,7 @@ import { FoodLogController } from './food-log.controller';
 import { FoodLogService } from './food-log.service';
 import { FoodLog, FoodLogSchema } from './schemas/food-log.schema';
 import { S3Module } from '../s3/s3.module';
+import { PointsModule } from '../points/points.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { S3Module } from '../s3/s3.module';
       { name: FoodLog.name, schema: FoodLogSchema },
     ]),
     S3Module,
+    PointsModule,
   ],
   controllers: [FoodLogController],
   providers: [FoodLogService],

@@ -15,12 +15,14 @@ import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
 import { UserService } from '../user/user.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { PointsService } from '../points/points.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private awsCognitoService: AwsCognitoService,
     private userService: UserService,
+    private pointsService: PointsService,
   ) {}
 
   @Post('/signup')
@@ -66,7 +68,16 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
     const user = await this.userService.getUserById(req.user.userId);
-    return { userId: req.user.userId, firstName: user.firstName };
+    const pointsStatus = await this.pointsService.getPointsStatus(req.user.userId);
+    
+    return { 
+      id: req.user.userId, 
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      isActive: user.isActive,
+      points: pointsStatus.totalPoints
+    };
   }
 
   @Post('/forgot-password')

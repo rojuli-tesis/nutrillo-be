@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FoodLog, FoodLogDocument } from './schemas/food-log.schema';
 import { S3Service } from '../s3/s3.service';
+import { PointsService } from '../points/points.service';
 
 @Injectable()
 export class FoodLogService {
@@ -12,6 +13,7 @@ export class FoodLogService {
     @InjectModel(FoodLog.name)
     private foodLogModel: Model<FoodLogDocument>,
     private s3Service: S3Service,
+    private pointsService: PointsService,
   ) {}
 
   async create(patientId: number, foodLogData: Partial<FoodLog>): Promise<FoodLog> {
@@ -116,7 +118,29 @@ export class FoodLogService {
       isActive: true,
     });
 
-    return foodLog.save();
+    const savedFoodLog = await foodLog.save();
+
+    // Award points for meal logging
+    try {
+      const pointsResult = await this.pointsService.awardMealLogPoints(
+        userId,
+        !!photoUrl,
+        savedFoodLog._id
+      );
+
+      // Update the food log with points information
+      await this.foodLogModel.findByIdAndUpdate(savedFoodLog._id, {
+        pointsEarned: pointsResult.pointsEarned,
+        streakMultiplier: pointsResult.multiplier
+      });
+
+      this.logger.log(`Awarded ${pointsResult.pointsEarned} points to user ${userId} for meal log`);
+    } catch (error) {
+      this.logger.error('Failed to award points for meal log:', error);
+      // Don't fail the meal log creation if points awarding fails
+    }
+
+    return savedFoodLog;
   }
 }
 

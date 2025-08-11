@@ -25,6 +25,12 @@ export class FoodLog {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ default: 0 })
+  pointsEarned: number;
+
+  @Prop({ default: 1.0 })
+  streakMultiplier: number;
 }
 
 export const FoodLogSchema = SchemaFactory.createForClass(FoodLog); 
