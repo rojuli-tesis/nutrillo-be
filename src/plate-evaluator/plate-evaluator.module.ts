@@ -5,9 +5,10 @@ import { PlateEvaluatorService } from './plate-evaluator.service';
 import { plateEvaluationLogProviders } from './plate-evaluation-log.providers';
 import { DatabaseModule } from '../database/database.module';
 import { PointsModule } from '../points/points.module';
+import { CustomInstructionsModule } from '../custom-instructions/custom-instructions.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, PointsModule],
+  imports: [ConfigModule, DatabaseModule, PointsModule, CustomInstructionsModule],
   controllers: [PlateEvaluatorController],
   providers: [
     PlateEvaluatorService,

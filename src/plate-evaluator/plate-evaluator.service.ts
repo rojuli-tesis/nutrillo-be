@@ -7,6 +7,7 @@ import { ToggleFavoriteResponseDto } from './dto/toggle-favorite.dto';
 import { PlateEvaluationLog } from './plate-evaluation-log.entity';
 import { User } from '../user/user.entity';
 import { PointsService } from '../points/points.service';
+import { CustomInstructionsService } from '../custom-instructions/custom-instructions.service';
 
 interface PlateEvaluation {
   score: number;
@@ -24,10 +25,12 @@ export class PlateEvaluatorService {
     @Inject('PLATE_EVALUATION_LOG_REPOSITORY')
     private plateEvaluationLogRepository: Repository<PlateEvaluationLog>,
     private pointsService: PointsService,
+    private customInstructionsService: CustomInstructionsService,
   ) {}
 
   async evaluatePlate(evaluatePlateDto: EvaluatePlateDto, userId: number): Promise<PlateEvaluation> {
     const { ingredients } = evaluatePlateDto;
+    this.logger.log(`Starting plate evaluation for user ID: ${userId}`);
     
     // Create initial log entry
     const logEntry = this.plateEvaluationLogRepository.create({
@@ -47,7 +50,11 @@ export class PlateEvaluatorService {
         throw new Error('At least 3 ingredients are required for evaluation');
       }
 
-      const prompt = this.buildEvaluationPrompt(ingredients);
+      // Get custom instructions for the user
+      const customInstructions = await this.customInstructionsService.getActiveInstructionsForUser(userId);
+      this.logger.log(`Found ${customInstructions.length} custom instructions for user ${userId}: ${customInstructions.join(', ')}`);
+      const prompt = this.buildEvaluationPrompt(ingredients, customInstructions);
+      this.logger.log(`Generated prompt with custom instructions: ${prompt}`);
 
       // Instantiate OpenAI client only when needed
       const apiKey = this.configService.get<string>('OPENAI_API_KEY');
@@ -155,19 +162,33 @@ export class PlateEvaluatorService {
     }
   }
 
-  private buildEvaluationPrompt(ingredients: any[]): string {
+  private buildEvaluationPrompt(ingredients: any[], customInstructions: string[] = []): string {
     const ingredientNames = ingredients.map(ing => ing.name).join(', ');
+    
+    // Build custom instructions section
+    let customInstructionsText = '';
+    if (customInstructions.length > 0) {
+      customInstructionsText = `
+
+INSTRUCCIONES PERSONALIZADAS DEL NUTRICIONISTA:
+${customInstructions.map(instruction => `- ${instruction}`).join('\n')}
+
+IMPORTANTE: Estas instrucciones son específicas para este paciente y DEBEN ser consideradas al evaluar el plato. Si algún ingrediente o combinación va contra estas instrucciones, debes:
+1. Reducir significativamente la puntuación
+2. Mencionar específicamente en "issues" por qué ese ingrediente/combinación es problemático según las instrucciones
+3. En "suggestions", explicar qué alternativas recomiendas basándote en las instrucciones personalizadas`;
+    }
 
     return `Estás ayudando a evaluar un plato de comida. Te paso una lista de ingredientes. Respondé únicamente en formato JSON, sin explicaciones, sin introducción ni cierre.
 
-Ingredientes del plato: ${ingredientNames}
+Ingredientes del plato: ${ingredientNames}${customInstructionsText}
 
 Evaluá lo siguiente:
 
-- "score": un número del 1 al 10 que refleje qué tan saludable y equilibrado es el plato.
+- "score": un número del 1 al 10 que refleje qué tan saludable y equilibrado es el plato. Si hay ingredientes que van contra las instrucciones personalizadas, reduce la puntuación significativamente.
 - "positives": array con los aspectos positivos detectados (presencia de vegetales, proteínas magras, pocas grasas, buena variedad, etc.).
-- "issues": array con los aspectos a mejorar (demasiadas grasas saturadas, falta de verduras, exceso de procesados, etc.).
-- "suggestions": un solo párrafo, breve y claro, con sugerencias concretas para mejorar el plato sin perder sabor ni cultura local.
+- "issues": array con los aspectos a mejorar. Si algún ingrediente va contra las instrucciones personalizadas, menciona específicamente por qué es problemático según esas instrucciones.
+- "suggestions": un solo párrafo, breve y claro, con sugerencias concretas para mejorar el plato. Si hay problemas relacionados con las instrucciones personalizadas, explica qué alternativas recomiendas.
 
 Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`;
   }
@@ -207,7 +228,7 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
         isVisibleToUser: true 
       },
       order: { updatedAt: 'DESC' },
-      select: ['id', 'ingredients', 'score', 'positives', 'issues', 'suggestions', 'userNotes', 'createdAt', 'updatedAt']
+      select: ['id', 'ingredients', 'score', 'positives', 'issues', 'suggestions', 'userNotes', 'nutritionistNotes', 'createdAt', 'updatedAt']
     });
 
     // Return in the same format as before for frontend compatibility
@@ -221,6 +242,7 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
         suggestions: log.suggestions
       },
       userNotes: log.userNotes,
+      nutritionistNotes: log.nutritionistNotes,
       createdAt: log.createdAt,
       updatedAt: log.updatedAt
     }));
@@ -243,6 +265,87 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
     return {
       success: true,
       isVisibleToUser: logEntry.isVisibleToUser
+    };
+  }
+
+  async getPatientEvaluations(patientId: number, includeHidden: boolean = false): Promise<any[]> {
+    this.logger.log(`Fetching plate evaluations for patient ${patientId}, includeHidden: ${includeHidden}`);
+    
+    const whereCondition: any = { 
+      user: { id: patientId }, 
+      isSuccess: true 
+    };
+
+    if (!includeHidden) {
+      whereCondition.isHiddenFromNutritionist = false;
+    }
+
+    const logs = await this.plateEvaluationLogRepository.find({
+      where: whereCondition,
+      order: { createdAt: 'DESC' },
+      select: [
+        'id', 'ingredients', 'score', 'positives', 'issues', 'suggestions', 
+        'userNotes', 'nutritionistNotes', 'isVisibleToUser', 'isHiddenFromNutritionist', 
+        'pointsEarned', 'createdAt', 'updatedAt'
+      ]
+    });
+
+    return logs.map(log => ({
+      id: log.id,
+      ingredients: log.ingredients,
+      score: log.score,
+      positives: log.positives,
+      issues: log.issues,
+      suggestions: log.suggestions,
+      isVisibleToUser: log.isVisibleToUser,
+      isHiddenFromNutritionist: log.isHiddenFromNutritionist,
+      userNotes: log.userNotes,
+      nutritionistNotes: log.nutritionistNotes,
+      pointsEarned: log.pointsEarned,
+      createdAt: log.createdAt,
+      updatedAt: log.updatedAt
+    }));
+  }
+
+  async toggleNutritionistHide(logId: number, nutritionistId: number): Promise<{ success: boolean; isHidden: boolean }> {
+    this.logger.log(`Toggling nutritionist hide status for evaluation ${logId} by nutritionist ${nutritionistId}`);
+    
+    // Note: In a real implementation, you might want to verify that the nutritionist
+    // has permission to view this patient's data
+    const logEntry = await this.plateEvaluationLogRepository.findOne({
+      where: { id: logId }
+    });
+
+    if (!logEntry) {
+      throw new Error('Evaluation not found');
+    }
+
+    logEntry.isHiddenFromNutritionist = !logEntry.isHiddenFromNutritionist;
+    await this.plateEvaluationLogRepository.save(logEntry);
+
+    return {
+      success: true,
+      isHidden: logEntry.isHiddenFromNutritionist
+    };
+  }
+
+  async updateNutritionistNotes(logId: number, nutritionistId: number, notes: string): Promise<{ success: boolean; notes: string }> {
+    this.logger.log(`Updating nutritionist notes for evaluation ${logId} by nutritionist ${nutritionistId}`);
+    
+    const logEntry = await this.plateEvaluationLogRepository.findOne({
+      where: { id: logId }
+    });
+
+    if (!logEntry) {
+      throw new Error('Evaluation not found');
+    }
+
+    logEntry.nutritionistNotes = notes;
+    await this.plateEvaluationLogRepository.save(logEntry);
+
+    return {
+      success: true,
+      notes: logEntry.nutritionistNotes
     };
   }
 } 

@@ -101,8 +101,14 @@ export class PlateEvaluationLog {
   @Column({ default: false })
   isVisibleToUser: boolean; // For favorites/saved recipes
 
+  @Column({ default: false })
+  isHiddenFromNutritionist: boolean; // For nutritionist to hide uninteresting plates
+
   @Column({ type: 'text', nullable: true })
   userNotes: string; // For user to add their own notes
+
+  @Column({ type: 'text', nullable: true })
+  nutritionistNotes: string; // For nutritionist to add notes for patient education
 
   @Column({ type: 'int', default: 0 })
   pointsEarned: number;

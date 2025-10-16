@@ -13,7 +13,9 @@ import { NutritionPlanModule } from './nutrition-plan/nutrition-plan.module';
 import { PlateIngredientModule } from './plate-ingredient/plate-ingredient.module';
 import { PlateEvaluatorModule } from './plate-evaluator/plate-evaluator.module';
 import { PointsModule } from './points/points.module';
-// import { RecipeRecommendationsModule } from './recipe-recommendations/recipe-recommendations.module';
+import { RecipeRecommendationsModule } from './recipe-recommendations/recipe-recommendations.module';
+import { RecipesModule } from './recipes/recipes.module';
+import { CustomInstructionsModule } from './custom-instructions/custom-instructions.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
 
@@ -42,7 +44,9 @@ const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
     PlateIngredientModule,
     PlateEvaluatorModule,
     PointsModule,
-    // RecipeRecommendationsModule,
+    RecipeRecommendationsModule,
+    RecipesModule,
+    CustomInstructionsModule,
   ],
   providers: [],
 })

@@ -18,13 +18,13 @@ export class RecipeRecommendationLog {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   plateEvaluationId: number;
 
   @Column({ type: 'simple-array' })
   ingredients: string[];
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   evaluationScore: number;
 
   @Column({ type: 'simple-array' })
@@ -38,6 +38,9 @@ export class RecipeRecommendationLog {
 
   @Column({ type: 'boolean', default: false })
   isSuccess: boolean;
+
+  @Column({ default: false })
+  isHiddenFromNutritionist: boolean; // For nutritionist to hide uninteresting recipes
 
   @Column({ type: 'json', nullable: true })
   openaiRequest: any;

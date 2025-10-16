@@ -11,7 +11,8 @@ import {
   Request,
   Get,
   Param,
-  Put
+  Put,
+  Query
 } from '@nestjs/common';
 import { PlateEvaluatorService } from './plate-evaluator.service';
 import { EvaluatePlateDto } from './dto/evaluate-plate.dto';
@@ -72,5 +73,38 @@ export class PlateEvaluatorController {
   ) {
     this.logger.log(`Toggling favorite status for evaluation ${id} by user ${req.user.userId}`);
     return await this.plateEvaluatorService.toggleFavorite(id, req.user.userId);
+  }
+
+  @Get('patient/:patientId')
+  @HttpCode(HttpStatus.OK)
+  async getPatientEvaluations(
+    @Param('patientId') patientId: number,
+    @Query('includeHidden') includeHidden: string,
+    @Request() req: Express.Request & { user: JwtUser }
+  ) {
+    this.logger.log(`Getting plate evaluations for patient ${patientId} by nutritionist ${req.user.userId}`);
+    const includeHiddenBool = includeHidden === 'true';
+    return await this.plateEvaluatorService.getPatientEvaluations(patientId, includeHiddenBool);
+  }
+
+  @Put(':id/toggle-nutritionist-hide')
+  @HttpCode(HttpStatus.OK)
+  async toggleNutritionistHide(
+    @Param('id') id: number,
+    @Request() req: Express.Request & { user: JwtUser }
+  ) {
+    this.logger.log(`Toggling nutritionist hide status for evaluation ${id} by nutritionist ${req.user.userId}`);
+    return await this.plateEvaluatorService.toggleNutritionistHide(id, req.user.userId);
+  }
+
+  @Put(':id/nutritionist-notes')
+  @HttpCode(HttpStatus.OK)
+  async updateNutritionistNotes(
+    @Param('id') id: number,
+    @Body('notes') notes: string,
+    @Request() req: Express.Request & { user: JwtUser }
+  ) {
+    this.logger.log(`Updating nutritionist notes for evaluation ${id} by nutritionist ${req.user.userId}`);
+    return await this.plateEvaluatorService.updateNutritionistNotes(id, req.user.userId, notes);
   }
 } 
