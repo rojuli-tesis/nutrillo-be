@@ -87,22 +87,50 @@ export class RegistrationService {
     userId: number,
   ): Promise<Registration> {
     try {
-      const result = await this.registrationModel.findOneAndUpdate(
-        { userId },
-        {
+      // First, find the existing registration to check if the step already exists
+      const existingRegistration = await this.registrationModel.findOne({ userId });
+      
+      if (!existingRegistration) {
+        throw new NotFoundException(`Registration not found for user ${userId}`);
+      }
+
+      // Check if the step already exists in the information array
+      const existingStepIndex = existingRegistration.information.findIndex(
+        (info) => info.stepName === step
+      );
+
+      let result: Registration;
+
+      if (existingStepIndex >= 0) {
+        // Update existing step
+        const updateQuery: any = {
           $set: {
             lastStep: step,
             finished: updateRegistrationDto.saveAndClose || false,
+            [`information.${existingStepIndex}`]: updateRegistrationDto.data,
           },
-          $push: {
-            information: updateRegistrationDto.data,
-          },
-        },
-        { new: true },
-      );
+        };
 
-      if (!result) {
-        throw new NotFoundException(`Registration not found for user ${userId}`);
+        result = await this.registrationModel.findOneAndUpdate(
+          { userId },
+          updateQuery,
+          { new: true },
+        );
+      } else {
+        // Add new step if it doesn't exist
+        result = await this.registrationModel.findOneAndUpdate(
+          { userId },
+          {
+            $set: {
+              lastStep: step,
+              finished: updateRegistrationDto.saveAndClose || false,
+            },
+            $push: {
+              information: updateRegistrationDto.data,
+            },
+          },
+          { new: true },
+        );
       }
 
       return result;

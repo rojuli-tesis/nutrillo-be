@@ -74,20 +74,34 @@ export interface ExtraDetails extends StepBase {
 
 export enum RegistrationSteps {
   PersonalData = 'personalData',
-  PhysicalActivity = 'physicalActivity',
+  CurrentStatus = 'currentStatus',
   HealthStatus = 'healthStatus',
-  DietDetails = 'dietDetails',
-  RoutineDetails = 'routineDetails',
-  ExtraDetails = 'extraDetails',
+  DietOne = 'diet-one',
+  DietTwo = 'diet-two',
+  DietThree = 'diet-three',
+  DietFour = 'diet-four',
+  RoutineOne = 'routine-one',
+  RoutineTwo = 'routine-two',
+  RoutineThree = 'routine-three',
+  RoutineFour = 'routine-four',
+  Exercise = 'exercise',
+  Lifestyle = 'lifestyle',
 }
 
 export type RegistrationStep =
   | PersonalData
-  | PhysicalActivity
+  | CurrentStatus
   | HealthStatus
-  | DietDetails
-  | RoutineDetails
-  | ExtraDetails;
+  | DietOne
+  | DietTwo
+  | DietThree
+  | DietFour
+  | RoutineOne
+  | RoutineTwo
+  | RoutineThree
+  | RoutineFour
+  | Exercise
+  | Lifestyle;
 
 export type RegistrationDocument = HydratedDocument<Registration>;
 

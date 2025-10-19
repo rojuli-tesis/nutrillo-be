@@ -16,6 +16,7 @@ import { PointsModule } from './points/points.module';
 import { RecipeRecommendationsModule } from './recipe-recommendations/recipe-recommendations.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { CustomInstructionsModule } from './custom-instructions/custom-instructions.module';
+import { UserPlanModule } from './user-plans/user-plan.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
 
@@ -47,6 +48,7 @@ const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
     RecipeRecommendationsModule,
     RecipesModule,
     CustomInstructionsModule,
+    UserPlanModule,
   ],
   providers: [],
 })

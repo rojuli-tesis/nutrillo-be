@@ -303,7 +303,7 @@ export class PointsService {
       dailyActivity = this.dailyActivityRepository.create({
         user: { id: userId } as any,
         activityDate: dateOnly,
-        activityType: DailyActivityType[activityType.toUpperCase() as keyof typeof DailyActivityType],
+        activityType: activityType === 'meal_log' ? DailyActivityType.MEAL_LOG : DailyActivityType.PLATE_EVALUATION,
         mealLogCount: 0,
         plateEvaluationCount: 0,
         totalPointsEarned: 0,
@@ -459,7 +459,9 @@ export class PointsService {
     return {
       dailyActivities: dailyActivities.map(a => ({
         id: a.id,
-        activityDate: a.activityDate.toISOString().split('T')[0],
+        activityDate: a.activityDate instanceof Date 
+          ? a.activityDate.toISOString().split('T')[0]
+          : String(a.activityDate).split('T')[0],
         activityType: a.activityType,
         mealLogCount: a.mealLogCount,
         plateEvaluationCount: a.plateEvaluationCount,
