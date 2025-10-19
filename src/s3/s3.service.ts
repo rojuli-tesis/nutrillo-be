@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class S3Service {
@@ -50,6 +50,74 @@ export class S3Service {
       return fileUrl;
     } catch (error) {
       this.logger.error('Error uploading file to S3:', error);
+      throw error;
+    }
+  }
+
+  async deleteFile(fileUrl: string): Promise<void> {
+    try {
+      // Extract the key from the URL
+      // URL format: https://bucket-name.s3.amazonaws.com/path/to/file
+      const urlParts = fileUrl.split('/');
+      const key = urlParts.slice(3).join('/'); // Remove 'https:', '', 'bucket-name.s3.amazonaws.com'
+      
+      this.logger.log('Deleting file from S3:', {
+        bucket: this.bucketName,
+        key,
+        originalUrl: fileUrl
+      });
+
+      const command = new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+
+      await this.s3Client.send(command);
+      this.logger.log('File deleted successfully from S3:', key);
+    } catch (error) {
+      this.logger.error('Error deleting file from S3:', error);
+      throw error;
+    }
+  }
+
+  async downloadFile(fileUrl: string): Promise<Buffer> {
+    try {
+      // Extract the key from the URL
+      // URL format: https://bucket-name.s3.amazonaws.com/path/to/file
+      const urlParts = fileUrl.split('/');
+      const key = urlParts.slice(3).join('/'); // Remove 'https:', '', 'bucket-name.s3.amazonaws.com'
+      
+      this.logger.log('Downloading file from S3:', {
+        bucket: this.bucketName,
+        key,
+        originalUrl: fileUrl
+      });
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+
+      const response = await this.s3Client.send(command);
+      
+      if (!response.Body) {
+        throw new Error('File not found or empty');
+      }
+
+      // Convert the stream to a buffer
+      const chunks: Uint8Array[] = [];
+      const stream = response.Body as any;
+      
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      
+      const buffer = Buffer.concat(chunks);
+      this.logger.log('File downloaded successfully from S3:', key);
+      
+      return buffer;
+    } catch (error) {
+      this.logger.error('Error downloading file from S3:', error);
       throw error;
     }
   }

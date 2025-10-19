@@ -13,8 +13,11 @@ import {
   Logger,
   UseInterceptors,
   UploadedFile,
-  BadRequestException
+  BadRequestException,
+  Res,
+  StreamableFile
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserPlanService } from './user-plan.service';
 import { CreateUserPlanDto } from './dto/create-user-plan.dto';
@@ -104,6 +107,26 @@ export class UserPlanController {
   ): Promise<UserPlanResponseDto> {
     this.logger.log(`User ${req.user.userId} setting user plan ${id} as active`);
     return await this.userPlanService.setActivePlan(id, req.user.userId);
+  }
+
+  @Get(':id/download')
+  async downloadPlan(
+    @Param('id') id: string,
+    @Request() req: Express.Request & { user: JwtUser },
+    @Res({ passthrough: true }) res: Response
+  ): Promise<StreamableFile> {
+    this.logger.log(`User ${req.user.userId} downloading user plan ${id}`);
+    
+    const fileBuffer = await this.userPlanService.downloadPlan(id, req.user.userId);
+    const userPlan = await this.userPlanService.findOne(id, req.user.userId);
+    
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${userPlan.fileName}"`,
+      'Content-Length': fileBuffer.length.toString(),
+    });
+    
+    return new StreamableFile(fileBuffer);
   }
 
   @Delete(':id')

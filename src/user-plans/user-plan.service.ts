@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { UserPlan } from './user-plan.entity';
 import { CreateUserPlanDto } from './dto/create-user-plan.dto';
@@ -194,6 +194,32 @@ export class UserPlanService {
       { user: { id: userId } },
       { isActive: false }
     );
+  }
+
+  async downloadPlan(id: string, userId: number): Promise<Buffer> {
+    this.logger.log(`Downloading user plan ${id} for user ${userId}`);
+
+    const userPlan = await this.userPlanRepository.findOne({
+      where: { id, user: { id: userId } },
+      relations: ['user'],
+    });
+
+    if (!userPlan) {
+      throw new NotFoundException('User plan not found');
+    }
+
+    if (!userPlan.fileUrl) {
+      throw new BadRequestException('No file associated with this plan');
+    }
+
+    try {
+      const fileBuffer = await this.s3Service.downloadFile(userPlan.fileUrl);
+      this.logger.log(`User plan ${id} downloaded successfully for user ${userId}`);
+      return fileBuffer;
+    } catch (error) {
+      this.logger.error(`Error downloading user plan ${id} for user ${userId}:`, error);
+      throw new BadRequestException('Failed to download file');
+    }
   }
 
   private mapToResponseDto(userPlan: UserPlan): UserPlanResponseDto {

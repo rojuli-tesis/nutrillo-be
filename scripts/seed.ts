@@ -162,6 +162,7 @@ async function seed() {
       const plateIngredientRepository = manager.getRepository(PlateIngredient);
       // Clear existing data
       console.log('Clearing existing data...');
+      await plateIngredientRepository.delete({});
       await ingredientSubtypeRepository.delete({});
       await ingredientTypeRepository.delete({});
 
