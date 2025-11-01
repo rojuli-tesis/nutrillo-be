@@ -90,18 +90,11 @@ export enum RegistrationSteps {
 
 export type RegistrationStep =
   | PersonalData
-  | CurrentStatus
+  | PhysicalActivity
   | HealthStatus
-  | DietOne
-  | DietTwo
-  | DietThree
-  | DietFour
-  | RoutineOne
-  | RoutineTwo
-  | RoutineThree
-  | RoutineFour
-  | Exercise
-  | Lifestyle;
+  | DietDetails
+  | RoutineDetails
+  | ExtraDetails;
 
 export type RegistrationDocument = HydratedDocument<Registration>;
 

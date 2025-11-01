@@ -17,6 +17,7 @@ import { RecipeRecommendationsModule } from './recipe-recommendations/recipe-rec
 import { RecipesModule } from './recipes/recipes.module';
 import { CustomInstructionsModule } from './custom-instructions/custom-instructions.module';
 import { UserPlanModule } from './user-plans/user-plan.module';
+import { AppController } from './app.controller';
 
 const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
 
@@ -50,6 +51,7 @@ const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
     CustomInstructionsModule,
     UserPlanModule,
   ],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {}

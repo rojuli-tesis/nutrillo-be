@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json yarn.lock ./
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Install dependencies using Yarn
 RUN yarn install --frozen-lockfile
 
@@ -25,4 +28,7 @@ RUN if [ "$NODE_ENV" = "production" ]; then yarn build; fi
 
 # Expose the port that the app runs on
 EXPOSE 4000
+
+# Start the application
+CMD ["node", "dist/main"]
 
