@@ -4,13 +4,13 @@ FROM node:18.13.0-alpine
 # Set the working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json yarn.lock ./
-
 # Install wget for health checks
 RUN apk add --no-cache wget
 
-# Install dependencies using Yarn
+# Copy package files
+COPY package*.json yarn.lock ./
+
+# Install dependencies using Yarn (including devDependencies needed for build)
 RUN yarn install --frozen-lockfile
 
 # Copy the rest of the application code
@@ -19,9 +19,6 @@ COPY . .
 # Build arguments for environment
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
-
-# Install dependencies again to catch any newly added packages
-RUN yarn install --frozen-lockfile
 
 # Conditionally run the build step based on the environment
 RUN if [ "$NODE_ENV" = "production" ]; then yarn build; fi
