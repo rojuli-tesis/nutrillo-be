@@ -11,7 +11,7 @@ RUN apk add --no-cache wget
 COPY package*.json yarn.lock ./
 
 # Install dependencies using Yarn (including devDependencies needed for build)
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile --production=false
 
 # Copy the rest of the application code
 COPY . .
