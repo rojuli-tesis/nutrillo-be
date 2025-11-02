@@ -3,4 +3,4 @@ export interface JwtUser {
   username: string;
   isAdmin: boolean;
   userId: number;
-} 
+}

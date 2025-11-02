@@ -8,12 +8,14 @@ import { PointsModule } from '../points/points.module';
 import { CustomInstructionsModule } from '../custom-instructions/custom-instructions.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, PointsModule, CustomInstructionsModule],
-  controllers: [PlateEvaluatorController],
-  providers: [
-    PlateEvaluatorService,
-    ...plateEvaluationLogProviders,
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    PointsModule,
+    CustomInstructionsModule,
   ],
+  controllers: [PlateEvaluatorController],
+  providers: [PlateEvaluatorService, ...plateEvaluationLogProviders],
   exports: [PlateEvaluatorService],
 })
-export class PlateEvaluatorModule {} 
+export class PlateEvaluatorModule {}

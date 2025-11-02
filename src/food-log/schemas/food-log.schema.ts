@@ -33,4 +33,4 @@ export class FoodLog {
   streakMultiplier: number;
 }
 
-export const FoodLogSchema = SchemaFactory.createForClass(FoodLog); 
+export const FoodLogSchema = SchemaFactory.createForClass(FoodLog);

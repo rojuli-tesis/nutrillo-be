@@ -30,4 +30,3 @@ export class ActivityHistoryDto {
   longestStreak: number;
   averagePointsPerDay: number;
 }
-

@@ -16,7 +16,10 @@ export class FoodLogService {
     private pointsService: PointsService,
   ) {}
 
-  async create(patientId: number, foodLogData: Partial<FoodLog>): Promise<FoodLog> {
+  async create(
+    patientId: number,
+    foodLogData: Partial<FoodLog>,
+  ): Promise<FoodLog> {
     const foodLog = new this.foodLogModel({
       ...foodLogData,
       patientId,
@@ -25,11 +28,17 @@ export class FoodLogService {
   }
 
   async findAll(patientId: number): Promise<FoodLog[]> {
-    return this.foodLogModel.find({ patientId, isActive: true }).sort({ date: -1 });
+    return this.foodLogModel
+      .find({ patientId, isActive: true })
+      .sort({ date: -1 });
   }
 
   async findOne(patientId: number, id: string): Promise<FoodLog> {
-    const foodLog = await this.foodLogModel.findOne({ _id: id, patientId, isActive: true });
+    const foodLog = await this.foodLogModel.findOne({
+      _id: id,
+      patientId,
+      isActive: true,
+    });
     if (!foodLog) {
       throw new NotFoundException(`Food log with ID ${id} not found`);
     }
@@ -39,21 +48,27 @@ export class FoodLogService {
   async findByDate(patientId: number, date: Date): Promise<FoodLog[]> {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
-    
+
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    return this.foodLogModel.find({
-      patientId,
-      date: {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      },
-      isActive: true,
-    }).sort({ date: 1 });
+    return this.foodLogModel
+      .find({
+        patientId,
+        date: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+        isActive: true,
+      })
+      .sort({ date: 1 });
   }
 
-  async update(patientId: number, id: string, foodLogData: Partial<FoodLog>): Promise<FoodLog> {
+  async update(
+    patientId: number,
+    id: string,
+    foodLogData: Partial<FoodLog>,
+  ): Promise<FoodLog> {
     const foodLog = await this.foodLogModel.findOneAndUpdate(
       { _id: id, patientId, isActive: true },
       { $set: foodLogData },
@@ -91,7 +106,7 @@ export class FoodLogService {
       userId,
       date: mealData.date,
       mealType: mealData.mealType,
-      hasPhoto: !!mealData.photo
+      hasPhoto: !!mealData.photo,
     });
 
     let photoUrl: string | undefined;
@@ -125,16 +140,18 @@ export class FoodLogService {
       const pointsResult = await this.pointsService.awardMealLogPoints(
         userId,
         !!photoUrl,
-        savedFoodLog._id
+        savedFoodLog._id,
       );
 
       // Update the food log with points information
       await this.foodLogModel.findByIdAndUpdate(savedFoodLog._id, {
         pointsEarned: pointsResult.pointsEarned,
-        streakMultiplier: pointsResult.multiplier
+        streakMultiplier: pointsResult.multiplier,
       });
 
-      this.logger.log(`Awarded ${pointsResult.pointsEarned} points to user ${userId} for meal log`);
+      this.logger.log(
+        `Awarded ${pointsResult.pointsEarned} points to user ${userId} for meal log`,
+      );
     } catch (error) {
       this.logger.error('Failed to award points for meal log:', error);
       // Don't fail the meal log creation if points awarding fails
@@ -150,4 +167,4 @@ export class CreateMealLogDto {
   description: string;
   notes?: string;
   photo?: any;
-} 
+}

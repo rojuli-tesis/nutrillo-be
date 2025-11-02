@@ -41,7 +41,10 @@ export class IngredientSubtypeService {
     return this.ingredientSubtypeRepository.save(subtype);
   }
 
-  async update(id: number, data: Partial<IngredientSubtype>): Promise<IngredientSubtype> {
+  async update(
+    id: number,
+    data: Partial<IngredientSubtype>,
+  ): Promise<IngredientSubtype> {
     await this.ingredientSubtypeRepository.update(id, data);
     return this.findOne(id);
   }
@@ -49,4 +52,4 @@ export class IngredientSubtypeService {
   async remove(id: number): Promise<void> {
     await this.ingredientSubtypeRepository.delete(id);
   }
-} 
+}

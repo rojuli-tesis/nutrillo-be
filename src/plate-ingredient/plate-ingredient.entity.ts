@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { IngredientType } from './ingredient-type.entity';
 import { IngredientSubtype } from './ingredient-subtype.entity';
 
@@ -51,4 +59,4 @@ export class PlateIngredient {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

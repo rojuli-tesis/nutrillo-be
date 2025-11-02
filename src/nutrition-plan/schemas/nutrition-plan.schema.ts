@@ -18,4 +18,4 @@ export class NutritionPlan {
   notes: string;
 }
 
-export const NutritionPlanSchema = SchemaFactory.createForClass(NutritionPlan); 
+export const NutritionPlanSchema = SchemaFactory.createForClass(NutritionPlan);

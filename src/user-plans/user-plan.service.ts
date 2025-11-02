@@ -1,4 +1,11 @@
-import { Injectable, Logger, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { UserPlan } from './user-plan.entity';
 import { CreateUserPlanDto } from './dto/create-user-plan.dto';
@@ -17,7 +24,10 @@ export class UserPlanService {
     private s3Service: S3Service,
   ) {}
 
-  async create(createUserPlanDto: CreateUserPlanDto, userId: number): Promise<UserPlanResponseDto> {
+  async create(
+    createUserPlanDto: CreateUserPlanDto,
+    userId: number,
+  ): Promise<UserPlanResponseDto> {
     this.logger.log(`Creating new user plan for user ${userId}`);
 
     // If setting as active, deactivate all other plans for this user
@@ -37,9 +47,9 @@ export class UserPlanService {
   }
 
   async createWithFile(
-    createUserPlanDto: CreateUserPlanDto, 
-    file: Express.Multer.File, 
-    userId: number
+    createUserPlanDto: CreateUserPlanDto,
+    file: Express.Multer.File,
+    userId: number,
   ): Promise<UserPlanResponseDto> {
     this.logger.log(`Creating new user plan with file for user ${userId}`);
 
@@ -74,7 +84,7 @@ export class UserPlanService {
       relations: ['user'],
     });
 
-    return userPlans.map(plan => this.mapToResponseDto(plan));
+    return userPlans.map((plan) => this.mapToResponseDto(plan));
   }
 
   async findOne(id: string, userId: number): Promise<UserPlanResponseDto> {
@@ -91,13 +101,19 @@ export class UserPlanService {
 
     // Check if plan belongs to the user
     if (userPlan.user.id !== userId) {
-      throw new ForbiddenException('You do not have permission to access this plan');
+      throw new ForbiddenException(
+        'You do not have permission to access this plan',
+      );
     }
 
     return this.mapToResponseDto(userPlan);
   }
 
-  async update(id: string, updateUserPlanDto: UpdateUserPlanDto, userId: number): Promise<UserPlanResponseDto> {
+  async update(
+    id: string,
+    updateUserPlanDto: UpdateUserPlanDto,
+    userId: number,
+  ): Promise<UserPlanResponseDto> {
     this.logger.log(`Updating user plan ${id} for user ${userId}`);
 
     const userPlan = await this.userPlanRepository.findOne({
@@ -111,7 +127,9 @@ export class UserPlanService {
 
     // Check if plan belongs to the user
     if (userPlan.user.id !== userId) {
-      throw new ForbiddenException('You do not have permission to update this plan');
+      throw new ForbiddenException(
+        'You do not have permission to update this plan',
+      );
     }
 
     // If setting as active, deactivate all other plans for this user
@@ -122,7 +140,9 @@ export class UserPlanService {
     // Update the plan
     Object.assign(userPlan, {
       ...updateUserPlanDto,
-      uploadDate: updateUserPlanDto.uploadDate ? new Date(updateUserPlanDto.uploadDate) : userPlan.uploadDate,
+      uploadDate: updateUserPlanDto.uploadDate
+        ? new Date(updateUserPlanDto.uploadDate)
+        : userPlan.uploadDate,
     });
 
     const updatedUserPlan = await this.userPlanRepository.save(userPlan);
@@ -144,7 +164,9 @@ export class UserPlanService {
 
     // Check if plan belongs to the user
     if (userPlan.user.id !== userId) {
-      throw new ForbiddenException('You do not have permission to delete this plan');
+      throw new ForbiddenException(
+        'You do not have permission to delete this plan',
+      );
     }
 
     await this.userPlanRepository.remove(userPlan);
@@ -162,7 +184,10 @@ export class UserPlanService {
     return activePlan ? this.mapToResponseDto(activePlan) : null;
   }
 
-  async setActivePlan(id: string, userId: number): Promise<UserPlanResponseDto> {
+  async setActivePlan(
+    id: string,
+    userId: number,
+  ): Promise<UserPlanResponseDto> {
     this.logger.log(`Setting user plan ${id} as active for user ${userId}`);
 
     const userPlan = await this.userPlanRepository.findOne({
@@ -176,7 +201,9 @@ export class UserPlanService {
 
     // Check if plan belongs to the user
     if (userPlan.user.id !== userId) {
-      throw new ForbiddenException('You do not have permission to modify this plan');
+      throw new ForbiddenException(
+        'You do not have permission to modify this plan',
+      );
     }
 
     // Deactivate all other plans for this user
@@ -192,7 +219,7 @@ export class UserPlanService {
   private async deactivateAllUserPlans(userId: number): Promise<void> {
     await this.userPlanRepository.update(
       { user: { id: userId } },
-      { isActive: false }
+      { isActive: false },
     );
   }
 
@@ -214,10 +241,15 @@ export class UserPlanService {
 
     try {
       const fileBuffer = await this.s3Service.downloadFile(userPlan.fileUrl);
-      this.logger.log(`User plan ${id} downloaded successfully for user ${userId}`);
+      this.logger.log(
+        `User plan ${id} downloaded successfully for user ${userId}`,
+      );
       return fileBuffer;
     } catch (error) {
-      this.logger.error(`Error downloading user plan ${id} for user ${userId}:`, error);
+      this.logger.error(
+        `Error downloading user plan ${id} for user ${userId}:`,
+        error,
+      );
       throw new BadRequestException('Failed to download file');
     }
   }

@@ -50,11 +50,11 @@ export class RegistrationController {
       registrationStepData,
       req.user.userId,
     );
-    
+
     if (registrationStepData.saveAndClose) {
       await this.userService.markRegistrationComplete(req.user.userId);
     }
-    
+
     return registration;
   }
 
@@ -65,7 +65,9 @@ export class RegistrationController {
    */
   @Get()
   @HttpCode(HttpStatus.OK)
-  async retrieveUserRegistration(@Request() req: Express.Request & { user: JwtUser }): Promise<Registration | null> {
+  async retrieveUserRegistration(
+    @Request() req: Express.Request & { user: JwtUser },
+  ): Promise<Registration | null> {
     return this.registrationService.findForUser(req.user.userId);
   }
 
@@ -76,7 +78,9 @@ export class RegistrationController {
    */
   @Patch('/abandoned')
   @HttpCode(HttpStatus.OK)
-  async abandonRegistration(@Request() req: Express.Request & { user: JwtUser }): Promise<Registration> {
+  async abandonRegistration(
+    @Request() req: Express.Request & { user: JwtUser },
+  ): Promise<Registration> {
     return this.registrationService.abandonProcess(req.user.userId);
   }
 
@@ -87,7 +91,9 @@ export class RegistrationController {
    */
   @Get('/:userId')
   @HttpCode(HttpStatus.OK)
-  async retrievePatientRegistrationData(@Param('userId') userId: number): Promise<Registration | null> {
+  async retrievePatientRegistrationData(
+    @Param('userId') userId: number,
+  ): Promise<Registration | null> {
     return this.registrationService.findForUser(userId);
   }
 }

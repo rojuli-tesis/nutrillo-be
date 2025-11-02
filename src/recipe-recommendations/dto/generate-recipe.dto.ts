@@ -1,4 +1,11 @@
-import { IsNumber, IsArray, IsString, IsOptional, Min, Max, ArrayMinSize } from 'class-validator';
+import {
+  IsNumber,
+  IsArray,
+  IsString,
+  Min,
+  Max,
+  ArrayMinSize,
+} from 'class-validator';
 
 export class GenerateRecipeDto {
   @IsNumber()

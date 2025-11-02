@@ -12,4 +12,3 @@ import { DatabaseModule } from '../database/database.module';
   exports: [RecipesService],
 })
 export class RecipesModule {}
-

@@ -8,7 +8,12 @@ import { PointsModule } from '../points/points.module';
 import { CustomInstructionsModule } from '../custom-instructions/custom-instructions.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, PointsModule, CustomInstructionsModule],
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    PointsModule,
+    CustomInstructionsModule,
+  ],
   controllers: [RecipeRecommendationsController],
   providers: [
     RecipeRecommendationsService,

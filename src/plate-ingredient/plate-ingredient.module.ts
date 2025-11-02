@@ -11,21 +11,23 @@ import { DatabaseModule } from '../database/database.module';
 import { DataSource } from 'typeorm';
 import { S3Module } from '../s3/s3.module';
 
-
 const plateIngredientProviders = [
   {
     provide: 'PLATE_INGREDIENT_REPOSITORY',
-    useFactory: (dataSource: DataSource) => dataSource.getRepository(PlateIngredient),
+    useFactory: (dataSource: DataSource) =>
+      dataSource.getRepository(PlateIngredient),
     inject: ['DATA_SOURCE'],
   },
   {
     provide: 'INGREDIENT_TYPE_REPOSITORY',
-    useFactory: (dataSource: DataSource) => dataSource.getRepository(IngredientType),
+    useFactory: (dataSource: DataSource) =>
+      dataSource.getRepository(IngredientType),
     inject: ['DATA_SOURCE'],
   },
   {
     provide: 'INGREDIENT_SUBTYPE_REPOSITORY',
-    useFactory: (dataSource: DataSource) => dataSource.getRepository(IngredientSubtype),
+    useFactory: (dataSource: DataSource) =>
+      dataSource.getRepository(IngredientSubtype),
     inject: ['DATA_SOURCE'],
   },
 ];
@@ -39,6 +41,10 @@ const plateIngredientProviders = [
     IngredientSubtypeService,
   ],
   controllers: [PlateIngredientController, IngredientTypeController],
-  exports: [PlateIngredientService, IngredientTypeService, IngredientSubtypeService],
+  exports: [
+    PlateIngredientService,
+    IngredientTypeService,
+    IngredientSubtypeService,
+  ],
 })
-export class PlateIngredientModule {} 
+export class PlateIngredientModule {}

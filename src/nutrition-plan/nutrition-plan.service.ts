@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { NutritionPlan, NutritionPlanDocument } from './schemas/nutrition-plan.schema';
+import {
+  NutritionPlan,
+  NutritionPlanDocument,
+} from './schemas/nutrition-plan.schema';
 import { S3Service } from '../s3/s3.service';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class NutritionPlanService {
@@ -18,9 +20,9 @@ export class NutritionPlanService {
       .find({ patientId })
       .sort({ createdAt: -1 })
       .exec();
-    
+
     // Transform dates to ISO strings for frontend compatibility
-    return plans.map(plan => {
+    return plans.map((plan) => {
       const planObj = plan.toObject() as any;
       return {
         ...planObj,
@@ -30,8 +32,17 @@ export class NutritionPlanService {
     });
   }
 
-  async uploadPlan({ file, patientId, adminId, notes = '' }: { file: any; patientId: string; adminId: string; notes: string }): Promise<any> {
-    const planId = uuidv4();
+  async uploadPlan({
+    file,
+    patientId,
+    adminId,
+    notes = '',
+  }: {
+    file: any;
+    patientId: string;
+    adminId: string;
+    notes: string;
+  }): Promise<any> {
     const path = `${adminId}/patients/${patientId}/plans`;
     const url = await this.s3Service.uploadFile(file, path);
     const doc = new this.nutritionPlanModel({
@@ -41,7 +52,7 @@ export class NutritionPlanService {
       notes,
     });
     const savedDoc = await doc.save();
-    
+
     // Transform dates to ISO strings for frontend compatibility
     const savedDocObj = savedDoc.toObject() as any;
     return {
@@ -56,7 +67,7 @@ export class NutritionPlanService {
     if (!plan) {
       throw new Error('Nutrition plan not found');
     }
-    
+
     // Transform dates to ISO strings for frontend compatibility
     const planObj = plan.toObject() as any;
     return {
@@ -98,4 +109,4 @@ export class NutritionPlanService {
     // Delete from database
     await this.nutritionPlanModel.findByIdAndDelete(planId);
   }
-} 
+}

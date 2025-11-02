@@ -77,14 +77,15 @@ export class AwsCognitoService {
     } catch (error: any) {
       // Handle specific AWS Cognito error codes
       let errorMessage = 'Error al registrar el administrador';
-      
+
       if (error.code) {
         switch (error.code) {
           case 'UsernameExistsException':
             errorMessage = 'El correo electrónico ya está registrado';
             break;
           case 'InvalidPasswordException':
-            errorMessage = 'La contraseña no cumple con los requisitos de seguridad';
+            errorMessage =
+              'La contraseña no cumple con los requisitos de seguridad';
             break;
           case 'InvalidParameterException':
             errorMessage = 'Los datos proporcionados no son válidos';
@@ -97,12 +98,15 @@ export class AwsCognitoService {
             break;
           default:
             console.error('AWS Cognito Error:', error);
-            errorMessage = error.message || 'Error al registrar el administrador';
+            errorMessage =
+              error.message || 'Error al registrar el administrador';
         }
       }
 
       // If admin creation failed, try to clean up the Cognito user
-      if (error.message === 'Error al crear el administrador en la base de datos') {
+      if (
+        error.message === 'Error al crear el administrador en la base de datos'
+      ) {
         try {
           const cognitoUser = new CognitoUser({
             Username: email,
@@ -234,7 +238,7 @@ export class AwsCognitoService {
               });
             }
           },
-          onFailure: (err) => {
+          onFailure: () => {
             reject({ message: 'Email o contraseña incorrectos' });
           },
         });

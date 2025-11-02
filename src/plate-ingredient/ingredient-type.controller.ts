@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { IngredientTypeService } from './ingredient-type.service';
 import { IngredientType } from './ingredient-type.entity';
 
@@ -22,13 +30,15 @@ export class IngredientTypeController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: Partial<IngredientType>): Promise<IngredientType> {
+  update(
+    @Param('id') id: string,
+    @Body() data: Partial<IngredientType>,
+  ): Promise<IngredientType> {
     return this.service.update(Number(id), data);
   }
-
 
   @Delete(':id')
   remove(@Param('id') id: string): Promise<void> {
     return this.service.remove(Number(id));
   }
-} 
+}

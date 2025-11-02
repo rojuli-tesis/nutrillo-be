@@ -1,4 +1,10 @@
-import { Injectable, Logger, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { SavedRecipe } from './recipe.entity';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
@@ -14,7 +20,10 @@ export class RecipesService {
     private savedRecipeRepository: Repository<SavedRecipe>,
   ) {}
 
-  async create(createRecipeDto: CreateRecipeDto, userId: number): Promise<RecipeResponseDto> {
+  async create(
+    createRecipeDto: CreateRecipeDto,
+    userId: number,
+  ): Promise<RecipeResponseDto> {
     this.logger.log(`Creating new recipe for user ${userId}`);
 
     const recipe = this.savedRecipeRepository.create({
@@ -36,7 +45,7 @@ export class RecipesService {
       relations: ['user'],
     });
 
-    return recipes.map(recipe => this.mapToResponseDto(recipe));
+    return recipes.map((recipe) => this.mapToResponseDto(recipe));
   }
 
   async findOne(id: string, userId: number): Promise<RecipeResponseDto> {
@@ -53,7 +62,9 @@ export class RecipesService {
 
     // Check if recipe belongs to the user
     if (recipe.user.id !== userId) {
-      throw new ForbiddenException('You do not have permission to access this recipe');
+      throw new ForbiddenException(
+        'You do not have permission to access this recipe',
+      );
     }
 
     return this.mapToResponseDto(recipe);
@@ -73,7 +84,9 @@ export class RecipesService {
 
     // Check if recipe belongs to the user
     if (recipe.user.id !== userId) {
-      throw new ForbiddenException('You do not have permission to delete this recipe');
+      throw new ForbiddenException(
+        'You do not have permission to delete this recipe',
+      );
     }
 
     await this.savedRecipeRepository.remove(recipe);
@@ -95,4 +108,3 @@ export class RecipesService {
     };
   }
 }
-

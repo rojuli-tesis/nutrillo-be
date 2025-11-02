@@ -12,7 +12,13 @@ import { PointsModule } from '../points/points.module';
 @Module({
   providers: [AwsCognitoService, JwtStrategy],
   controllers: [AuthController],
-  imports: [PassportModule, UserModule, AdminModule, InviteModule, PointsModule],
+  imports: [
+    PassportModule,
+    UserModule,
+    AdminModule,
+    InviteModule,
+    PointsModule,
+  ],
   exports: [AwsCognitoService],
 })
 export class AuthModule {}

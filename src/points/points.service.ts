@@ -3,13 +3,19 @@ import { Repository } from 'typeorm';
 import { UserPoints } from './user-points.entity';
 import { UserStreaks, StreakType } from './user-streaks.entity';
 import { PointTransactions, ActivityType } from './point-transactions.entity';
-import { DailyActivity, ActivityType as DailyActivityType } from './daily-activity.entity';
+import {
+  DailyActivity,
+  ActivityType as DailyActivityType,
+} from './daily-activity.entity';
 import { PointsStatusDto, PointsHistoryDto } from './dto/points-status.dto';
-import { ActivityHistoryDto, CalendarMonthDto } from './dto/activity-history.dto';
-import { 
-  calculateStreakMultiplier, 
-  areConsecutiveDays, 
-  isSameDay 
+import {
+  ActivityHistoryDto,
+  CalendarMonthDto,
+} from './dto/activity-history.dto';
+import {
+  calculateStreakMultiplier,
+  areConsecutiveDays,
+  isSameDay,
 } from './points.helpers';
 
 @Injectable()
@@ -27,18 +33,16 @@ export class PointsService {
     private dailyActivityRepository: Repository<DailyActivity>,
   ) {}
 
-
-
   /**
    * Update or create user streak
    */
   private async updateStreak(
     userId: number,
     streakType: StreakType,
-    activityDate: Date
+    activityDate: Date,
   ): Promise<{ currentStreak: number; multiplier: number }> {
     let streak = await this.userStreaksRepository.findOne({
-      where: { user: { id: userId }, streakType }
+      where: { user: { id: userId }, streakType },
     });
 
     if (!streak) {
@@ -47,7 +51,7 @@ export class PointsService {
         streakType,
         currentStreak: 0,
         longestStreak: 0,
-        lastActivityDate: null
+        lastActivityDate: null,
       });
     }
 
@@ -76,10 +80,10 @@ export class PointsService {
     await this.userStreaksRepository.save(streak);
 
     const multiplier = calculateStreakMultiplier(streak.currentStreak);
-    
+
     return {
       currentStreak: streak.currentStreak,
-      multiplier
+      multiplier,
     };
   }
 
@@ -89,15 +93,19 @@ export class PointsService {
   async awardMealLogPoints(
     userId: number,
     hasPhoto: boolean = false,
-    relatedEntityId?: number
-  ): Promise<{ pointsEarned: number; multiplier: number; currentStreak: number }> {
+    relatedEntityId?: number,
+  ): Promise<{
+    pointsEarned: number;
+    multiplier: number;
+    currentStreak: number;
+  }> {
     const today = new Date();
-    
+
     // Update streak
     const { currentStreak, multiplier } = await this.updateStreak(
       userId,
       StreakType.MEAL_LOGGING,
-      today
+      today,
     );
 
     // Calculate base points
@@ -120,18 +128,26 @@ export class PointsService {
       multiplier,
       basePoints,
       `Meal log${hasPhoto ? ' with photo' : ''}`,
-      relatedEntityId
+      relatedEntityId,
     );
 
     // Update daily activity
-    await this.updateDailyActivity(userId, today, 'meal_log', pointsEarned, multiplier);
+    await this.updateDailyActivity(
+      userId,
+      today,
+      'meal_log',
+      pointsEarned,
+      multiplier,
+    );
 
-    this.logger.log(`Awarded ${pointsEarned} points to user ${userId} for meal log (streak: ${currentStreak}, multiplier: ${multiplier}x)`);
+    this.logger.log(
+      `Awarded ${pointsEarned} points to user ${userId} for meal log (streak: ${currentStreak}, multiplier: ${multiplier}x)`,
+    );
 
     return {
       pointsEarned,
       multiplier,
-      currentStreak
+      currentStreak,
     };
   }
 
@@ -141,20 +157,24 @@ export class PointsService {
   async awardPlateEvaluationPoints(
     userId: number,
     score?: number,
-    relatedEntityId?: number
-  ): Promise<{ pointsEarned: number; multiplier: number; currentStreak: number }> {
+    relatedEntityId?: number,
+  ): Promise<{
+    pointsEarned: number;
+    multiplier: number;
+    currentStreak: number;
+  }> {
     const today = new Date();
-    
+
     // Update streak
     const { currentStreak, multiplier } = await this.updateStreak(
       userId,
       StreakType.PLATE_BUILDER,
-      today
+      today,
     );
 
     // Calculate base points
     let basePoints = 15; // Base points for plate evaluation
-    
+
     // High score bonus (8+ score)
     if (score && score >= 8) {
       basePoints += 5;
@@ -174,18 +194,26 @@ export class PointsService {
       multiplier,
       basePoints,
       `Plate evaluation${score && score >= 8 ? ' (high score)' : ''}`,
-      relatedEntityId
+      relatedEntityId,
     );
 
     // Update daily activity
-    await this.updateDailyActivity(userId, today, 'plate_evaluation', pointsEarned, multiplier);
+    await this.updateDailyActivity(
+      userId,
+      today,
+      'plate_evaluation',
+      pointsEarned,
+      multiplier,
+    );
 
-    this.logger.log(`Awarded ${pointsEarned} points to user ${userId} for plate evaluation (streak: ${currentStreak}, multiplier: ${multiplier}x)`);
+    this.logger.log(
+      `Awarded ${pointsEarned} points to user ${userId} for plate evaluation (streak: ${currentStreak}, multiplier: ${multiplier}x)`,
+    );
 
     return {
       pointsEarned,
       multiplier,
-      currentStreak
+      currentStreak,
     };
   }
 
@@ -194,13 +222,13 @@ export class PointsService {
    */
   private async addPointsToUser(userId: number, points: number): Promise<void> {
     let userPoints = await this.userPointsRepository.findOne({
-      where: { user: { id: userId } }
+      where: { user: { id: userId } },
     });
 
     if (!userPoints) {
       userPoints = this.userPointsRepository.create({
         user: { id: userId } as any,
-        totalPoints: 0
+        totalPoints: 0,
       });
     }
 
@@ -211,9 +239,12 @@ export class PointsService {
   /**
    * Deduct points from user's total
    */
-  private async deductPointsFromUser(userId: number, points: number): Promise<void> {
+  private async deductPointsFromUser(
+    userId: number,
+    points: number,
+  ): Promise<void> {
     const userPoints = await this.userPointsRepository.findOne({
-      where: { user: { id: userId } }
+      where: { user: { id: userId } },
     });
 
     if (!userPoints) {
@@ -221,7 +252,9 @@ export class PointsService {
     }
 
     if (userPoints.totalPoints < points) {
-      throw new Error(`Insufficient points. You have ${userPoints.totalPoints} points, but need ${points} points.`);
+      throw new Error(
+        `Insufficient points. You have ${userPoints.totalPoints} points, but need ${points} points.`,
+      );
     }
 
     userPoints.totalPoints -= points;
@@ -236,9 +269,11 @@ export class PointsService {
     points: number,
     activityType: ActivityType,
     description: string,
-    relatedEntityId?: number
+    relatedEntityId?: number,
   ): Promise<void> {
-    this.logger.log(`User ${userId} spending ${points} points for ${activityType}`);
+    this.logger.log(
+      `User ${userId} spending ${points} points for ${activityType}`,
+    );
 
     // Deduct points from user's total
     await this.deductPointsFromUser(userId, points);
@@ -251,7 +286,7 @@ export class PointsService {
       1.0, // No multiplier for spending
       points,
       description,
-      relatedEntityId
+      relatedEntityId,
     );
 
     this.logger.log(`Successfully spent ${points} points for user ${userId}`);
@@ -267,7 +302,7 @@ export class PointsService {
     streakMultiplier: number,
     basePoints: number,
     description: string,
-    relatedEntityId?: number
+    relatedEntityId?: number,
   ): Promise<void> {
     const transaction = this.pointTransactionsRepository.create({
       user: { id: userId } as any,
@@ -276,7 +311,7 @@ export class PointsService {
       streakMultiplier,
       basePoints,
       description,
-      relatedEntityId
+      relatedEntityId,
     });
 
     await this.pointTransactionsRepository.save(transaction);
@@ -290,24 +325,27 @@ export class PointsService {
     activityDate: Date,
     activityType: 'meal_log' | 'plate_evaluation',
     pointsEarned: number,
-    multiplier: number
+    multiplier: number,
   ): Promise<void> {
     const dateOnly = new Date(activityDate);
     dateOnly.setHours(0, 0, 0, 0);
 
     let dailyActivity = await this.dailyActivityRepository.findOne({
-      where: { user: { id: userId }, activityDate: dateOnly }
+      where: { user: { id: userId }, activityDate: dateOnly },
     });
 
     if (!dailyActivity) {
       dailyActivity = this.dailyActivityRepository.create({
         user: { id: userId } as any,
         activityDate: dateOnly,
-        activityType: activityType === 'meal_log' ? DailyActivityType.MEAL_LOG : DailyActivityType.PLATE_EVALUATION,
+        activityType:
+          activityType === 'meal_log'
+            ? DailyActivityType.MEAL_LOG
+            : DailyActivityType.PLATE_EVALUATION,
         mealLogCount: 0,
         plateEvaluationCount: 0,
         totalPointsEarned: 0,
-        averageMultiplier: 0
+        averageMultiplier: 0,
       });
     }
 
@@ -321,13 +359,19 @@ export class PointsService {
     dailyActivity.totalPointsEarned += pointsEarned;
 
     // Update activity type if both activities occurred
-    if (dailyActivity.mealLogCount > 0 && dailyActivity.plateEvaluationCount > 0) {
+    if (
+      dailyActivity.mealLogCount > 0 &&
+      dailyActivity.plateEvaluationCount > 0
+    ) {
       dailyActivity.activityType = DailyActivityType.BOTH;
     }
 
     // Calculate average multiplier
-    const totalActivities = dailyActivity.mealLogCount + dailyActivity.plateEvaluationCount;
-    dailyActivity.averageMultiplier = ((dailyActivity.averageMultiplier * (totalActivities - 1)) + multiplier) / totalActivities;
+    const totalActivities =
+      dailyActivity.mealLogCount + dailyActivity.plateEvaluationCount;
+    dailyActivity.averageMultiplier =
+      (dailyActivity.averageMultiplier * (totalActivities - 1) + multiplier) /
+      totalActivities;
 
     await this.dailyActivityRepository.save(dailyActivity);
   }
@@ -338,16 +382,16 @@ export class PointsService {
   async getPointsStatus(userId: number): Promise<PointsStatusDto> {
     // Get total points
     const userPoints = await this.userPointsRepository.findOne({
-      where: { user: { id: userId } }
+      where: { user: { id: userId } },
     });
 
     // Get streaks
     const mealLoggingStreak = await this.userStreaksRepository.findOne({
-      where: { user: { id: userId }, streakType: StreakType.MEAL_LOGGING }
+      where: { user: { id: userId }, streakType: StreakType.MEAL_LOGGING },
     });
 
     const plateBuilderStreak = await this.userStreaksRepository.findOne({
-      where: { user: { id: userId }, streakType: StreakType.PLATE_BUILDER }
+      where: { user: { id: userId }, streakType: StreakType.PLATE_BUILDER },
     });
 
     return {
@@ -356,122 +400,141 @@ export class PointsService {
         mealLogging: {
           currentStreak: mealLoggingStreak?.currentStreak || 0,
           longestStreak: mealLoggingStreak?.longestStreak || 0,
-          multiplier: calculateStreakMultiplier(mealLoggingStreak?.currentStreak || 0)
+          multiplier: calculateStreakMultiplier(
+            mealLoggingStreak?.currentStreak || 0,
+          ),
         },
         plateBuilder: {
           currentStreak: plateBuilderStreak?.currentStreak || 0,
           longestStreak: plateBuilderStreak?.longestStreak || 0,
-          multiplier: calculateStreakMultiplier(plateBuilderStreak?.currentStreak || 0)
-        }
-      }
+          multiplier: calculateStreakMultiplier(
+            plateBuilderStreak?.currentStreak || 0,
+          ),
+        },
+      },
     };
   }
 
   /**
    * Get user's point transaction history
    */
-  async getPointsHistory(userId: number, limit: number = 50): Promise<PointsHistoryDto> {
+  async getPointsHistory(
+    userId: number,
+    limit: number = 50,
+  ): Promise<PointsHistoryDto> {
     const transactions = await this.pointTransactionsRepository.find({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },
-      take: limit
+      take: limit,
     });
 
     const total = await this.pointTransactionsRepository.count({
-      where: { user: { id: userId } }
+      where: { user: { id: userId } },
     });
 
     return {
-      transactions: transactions.map(t => ({
+      transactions: transactions.map((t) => ({
         id: t.id,
         activityType: t.activityType,
         pointsEarned: t.pointsEarned,
         streakMultiplier: Number(t.streakMultiplier),
         basePoints: t.basePoints,
         description: t.description,
-        createdAt: t.createdAt
+        createdAt: t.createdAt,
       })),
-      total
+      total,
     };
   }
 
   /**
    * Get calendar data for a specific month
    */
-  async getCalendarMonth(userId: number, year: number, month: number): Promise<CalendarMonthDto> {
+  async getCalendarMonth(
+    userId: number,
+    year: number,
+    month: number,
+  ): Promise<CalendarMonthDto> {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0); // Last day of the month
 
     const activities = await this.dailyActivityRepository.find({
-      where: { 
+      where: {
         user: { id: userId },
         activityDate: {
           $gte: startDate,
-          $lte: endDate
-        } as any
+          $lte: endDate,
+        } as any,
       },
-      order: { activityDate: 'ASC' }
+      order: { activityDate: 'ASC' },
     });
 
     return {
       year,
       month,
-      activities: activities.map(a => ({
+      activities: activities.map((a) => ({
         id: a.id,
         activityDate: a.activityDate.toISOString().split('T')[0],
         activityType: a.activityType,
         mealLogCount: a.mealLogCount,
         plateEvaluationCount: a.plateEvaluationCount,
         totalPointsEarned: a.totalPointsEarned,
-        averageMultiplier: Number(a.averageMultiplier)
-      }))
+        averageMultiplier: Number(a.averageMultiplier),
+      })),
     };
   }
 
   /**
    * Get comprehensive activity history
    */
-  async getActivityHistory(userId: number, limit: number = 100): Promise<ActivityHistoryDto> {
+  async getActivityHistory(
+    userId: number,
+    limit: number = 100,
+  ): Promise<ActivityHistoryDto> {
     const dailyActivities = await this.dailyActivityRepository.find({
       where: { user: { id: userId } },
       order: { activityDate: 'DESC' },
-      take: limit
+      take: limit,
     });
 
     // Calculate statistics
     const totalActiveDays = dailyActivities.length;
-    const totalPoints = dailyActivities.reduce((sum, activity) => sum + activity.totalPointsEarned, 0);
-    const averagePointsPerDay = totalActiveDays > 0 ? totalPoints / totalActiveDays : 0;
+    const totalPoints = dailyActivities.reduce(
+      (sum, activity) => sum + activity.totalPointsEarned,
+      0,
+    );
+    const averagePointsPerDay =
+      totalActiveDays > 0 ? totalPoints / totalActiveDays : 0;
 
     // Get longest streak from streaks table
     const mealStreak = await this.userStreaksRepository.findOne({
-      where: { user: { id: userId }, streakType: StreakType.MEAL_LOGGING }
+      where: { user: { id: userId }, streakType: StreakType.MEAL_LOGGING },
     });
     const plateStreak = await this.userStreaksRepository.findOne({
-      where: { user: { id: userId }, streakType: StreakType.PLATE_BUILDER }
+      where: { user: { id: userId }, streakType: StreakType.PLATE_BUILDER },
     });
 
     const longestStreak = Math.max(
       mealStreak?.longestStreak || 0,
-      plateStreak?.longestStreak || 0
+      plateStreak?.longestStreak || 0,
     );
 
     return {
-      dailyActivities: dailyActivities.map(a => ({
+      dailyActivities: dailyActivities.map((a) => ({
         id: a.id,
-        activityDate: a.activityDate instanceof Date 
-          ? a.activityDate.toISOString().split('T')[0]
-          : String(a.activityDate).split('T')[0],
+        activityDate:
+          a.activityDate instanceof Date
+            ? a.activityDate.toISOString().split('T')[0]
+            : String(a.activityDate).split('T')[0],
         activityType: a.activityType,
         mealLogCount: a.mealLogCount,
         plateEvaluationCount: a.plateEvaluationCount,
         totalPointsEarned: a.totalPointsEarned,
-        averageMultiplier: Number(a.averageMultiplier)
+        averageMultiplier: Number(a.averageMultiplier),
       })),
       streakHistory: [], // TODO: Implement streak history calculation
       totalActiveDays,
       longestStreak,
-      averagePointsPerDay
+      averagePointsPerDay,
     };
   }
 }

@@ -8,9 +8,7 @@ import { PointsModule } from '../points/points.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: FoodLog.name, schema: FoodLogSchema },
-    ]),
+    MongooseModule.forFeature([{ name: FoodLog.name, schema: FoodLogSchema }]),
     S3Module,
     PointsModule,
   ],
@@ -18,4 +16,4 @@ import { PointsModule } from '../points/points.module';
   providers: [FoodLogService],
   exports: [FoodLogService],
 })
-export class FoodLogModule {} 
+export class FoodLogModule {}

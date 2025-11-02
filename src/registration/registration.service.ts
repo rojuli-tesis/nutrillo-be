@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Registration, RegistrationSteps } from './schemas/registration.schema';
 import { Model } from 'mongoose';
@@ -88,15 +92,19 @@ export class RegistrationService {
   ): Promise<Registration> {
     try {
       // First, find the existing registration to check if the step already exists
-      const existingRegistration = await this.registrationModel.findOne({ userId });
-      
+      const existingRegistration = await this.registrationModel.findOne({
+        userId,
+      });
+
       if (!existingRegistration) {
-        throw new NotFoundException(`Registration not found for user ${userId}`);
+        throw new NotFoundException(
+          `Registration not found for user ${userId}`,
+        );
       }
 
       // Check if the step already exists in the information array
       const existingStepIndex = existingRegistration.information.findIndex(
-        (info) => info.stepName === step
+        (info) => info.stepName === step,
       );
 
       let result: Registration;
@@ -173,7 +181,9 @@ export class RegistrationService {
       );
 
       if (!result) {
-        throw new NotFoundException(`Registration not found for user ${userId}`);
+        throw new NotFoundException(
+          `Registration not found for user ${userId}`,
+        );
       }
 
       return result;

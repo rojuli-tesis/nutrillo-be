@@ -1,21 +1,21 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  UseGuards, 
-  Request, 
-  HttpCode, 
-  HttpStatus, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  HttpCode,
+  HttpStatus,
   Logger,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
   Res,
-  StreamableFile
+  StreamableFile,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -42,10 +42,13 @@ export class UserPlanController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createUserPlanDto: CreateUserPlanDto,
-    @Request() req: Express.Request & { user: JwtUser }
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<UserPlanResponseDto> {
     this.logger.log(`User ${req.user.userId} creating new user plan`);
-    return await this.userPlanService.create(createUserPlanDto, req.user.userId);
+    return await this.userPlanService.create(
+      createUserPlanDto,
+      req.user.userId,
+    );
   }
 
   @Post('upload')
@@ -54,20 +57,24 @@ export class UserPlanController {
   async createWithFile(
     @Body() createUserPlanDto: CreateUserPlanDto,
     @UploadedFile() file: Express.Multer.File,
-    @Request() req: Express.Request & { user: JwtUser }
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<UserPlanResponseDto> {
     this.logger.log(`User ${req.user.userId} creating new user plan with file`);
-    
+
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
-    return await this.userPlanService.createWithFile(createUserPlanDto, file, req.user.userId);
+    return await this.userPlanService.createWithFile(
+      createUserPlanDto,
+      file,
+      req.user.userId,
+    );
   }
 
   @Get()
   async findAll(
-    @Request() req: Express.Request & { user: JwtUser }
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<UserPlanResponseDto[]> {
     this.logger.log(`User ${req.user.userId} fetching all user plans`);
     return await this.userPlanService.findAll(req.user.userId);
@@ -75,7 +82,7 @@ export class UserPlanController {
 
   @Get('active')
   async getActivePlan(
-    @Request() req: Express.Request & { user: JwtUser }
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<UserPlanResponseDto | null> {
     this.logger.log(`User ${req.user.userId} fetching active plan`);
     return await this.userPlanService.getActivePlan(req.user.userId);
@@ -84,7 +91,7 @@ export class UserPlanController {
   @Get(':id')
   async findOne(
     @Param('id') id: string,
-    @Request() req: Express.Request & { user: JwtUser }
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<UserPlanResponseDto> {
     this.logger.log(`User ${req.user.userId} fetching user plan ${id}`);
     return await this.userPlanService.findOne(id, req.user.userId);
@@ -94,18 +101,24 @@ export class UserPlanController {
   async update(
     @Param('id') id: string,
     @Body() updateUserPlanDto: UpdateUserPlanDto,
-    @Request() req: Express.Request & { user: JwtUser }
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<UserPlanResponseDto> {
     this.logger.log(`User ${req.user.userId} updating user plan ${id}`);
-    return await this.userPlanService.update(id, updateUserPlanDto, req.user.userId);
+    return await this.userPlanService.update(
+      id,
+      updateUserPlanDto,
+      req.user.userId,
+    );
   }
 
   @Patch(':id/activate')
   async setActivePlan(
     @Param('id') id: string,
-    @Request() req: Express.Request & { user: JwtUser }
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<UserPlanResponseDto> {
-    this.logger.log(`User ${req.user.userId} setting user plan ${id} as active`);
+    this.logger.log(
+      `User ${req.user.userId} setting user plan ${id} as active`,
+    );
     return await this.userPlanService.setActivePlan(id, req.user.userId);
   }
 
@@ -113,19 +126,22 @@ export class UserPlanController {
   async downloadPlan(
     @Param('id') id: string,
     @Request() req: Express.Request & { user: JwtUser },
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
     this.logger.log(`User ${req.user.userId} downloading user plan ${id}`);
-    
-    const fileBuffer = await this.userPlanService.downloadPlan(id, req.user.userId);
+
+    const fileBuffer = await this.userPlanService.downloadPlan(
+      id,
+      req.user.userId,
+    );
     const userPlan = await this.userPlanService.findOne(id, req.user.userId);
-    
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${userPlan.fileName}"`,
       'Content-Length': fileBuffer.length.toString(),
     });
-    
+
     return new StreamableFile(fileBuffer);
   }
 
@@ -133,7 +149,7 @@ export class UserPlanController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @Param('id') id: string,
-    @Request() req: Express.Request & { user: JwtUser }
+    @Request() req: Express.Request & { user: JwtUser },
   ): Promise<void> {
     this.logger.log(`User ${req.user.userId} deleting user plan ${id}`);
     await this.userPlanService.remove(id, req.user.userId);

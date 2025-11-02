@@ -1,11 +1,11 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
-  JoinColumn, 
-  CreateDateColumn, 
-  UpdateDateColumn 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../user/user.entity';
 
@@ -37,13 +37,6 @@ interface OpenAIResponse {
     completion_tokens: number;
     total_tokens: number;
   };
-}
-
-interface PlateEvaluation {
-  score: number;
-  positives: string[];
-  issues: string[];
-  suggestions: string;
 }
 
 @Entity('plate_evaluation_log')
@@ -121,4 +114,4 @@ export class PlateEvaluationLog {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

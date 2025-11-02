@@ -30,7 +30,8 @@ export class FoodLogController {
   async createMealLog(
     @Request() req: any,
     @UploadedFile() photo: any,
-    @Body() mealData: {
+    @Body()
+    mealData: {
       date: string;
       mealType: string;
       description: string;
@@ -44,16 +45,16 @@ export class FoodLogController {
       filename: photo?.originalname,
       mimetype: photo?.mimetype,
       size: photo?.size,
-      buffer: photo?.buffer ? 'Present' : 'Not present'
+      buffer: photo?.buffer ? 'Present' : 'Not present',
     });
-    
+
     return this.foodLogService.createMealLog(
       req.user?.userId || 1,
       req.user?.adminId,
       {
         ...mealData,
         photo: photo,
-      }
+      },
     );
   }
 
@@ -68,7 +69,10 @@ export class FoodLogController {
   }
 
   @Get('patient/:patientId')
-  findAllByPatientId(@Request() req: any, @Param('patientId') patientId: string) {
+  findAllByPatientId(
+    @Request() req: any,
+    @Param('patientId') patientId: string,
+  ) {
     return this.foodLogService.findAll(parseInt(patientId));
   }
 
@@ -95,4 +99,4 @@ export class FoodLogController {
   remove(@Request() req: any, @Param('id') id: string) {
     return this.foodLogService.remove(req.user.userId, id);
   }
-} 
+}

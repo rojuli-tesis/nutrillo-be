@@ -52,14 +52,21 @@ export class RecipeRecommendationsService {
 
   async generateRecipeRecommendations(
     generateRecipeDto: GenerateRecipeDto,
-    userId: number
+    userId: number,
   ): Promise<RecipeRecommendationResponse> {
-    const { plateEvaluationId, ingredients, evaluationScore, evaluationIssues } = generateRecipeDto;
-    
+    const {
+      plateEvaluationId,
+      ingredients,
+      evaluationScore,
+      evaluationIssues,
+    } = generateRecipeDto;
+
     // Check if user has enough points
     const pointsStatus = await this.pointsService.getPointsStatus(userId);
     if (pointsStatus.totalPoints < this.RECIPE_COST) {
-      throw new Error(`Insufficient points. You have ${pointsStatus.totalPoints} points, but need ${this.RECIPE_COST} points for recipe recommendations.`);
+      throw new Error(
+        `Insufficient points. You have ${pointsStatus.totalPoints} points, but need ${this.RECIPE_COST} points for recipe recommendations.`,
+      );
     }
 
     // Create initial log entry
@@ -77,9 +84,19 @@ export class RecipeRecommendationsService {
 
     try {
       // Get custom instructions for the user
-      const customInstructions = await this.customInstructionsService.getActiveInstructionsForUser(userId);
-      this.logger.log(`Found ${customInstructions.length} custom instructions for user ${userId}: ${customInstructions.join(', ')}`);
-      const prompt = this.buildRecipePrompt(ingredients, evaluationScore, evaluationIssues, customInstructions);
+      const customInstructions =
+        await this.customInstructionsService.getActiveInstructionsForUser(
+          userId,
+        );
+      this.logger.log(
+        `Found ${customInstructions.length} custom instructions for user ${userId}: ${customInstructions.join(', ')}`,
+      );
+      const prompt = this.buildRecipePrompt(
+        ingredients,
+        evaluationScore,
+        evaluationIssues,
+        customInstructions,
+      );
 
       // Instantiate OpenAI client
       const apiKey = this.configService.get<string>('OPENAI_API_KEY');
@@ -88,18 +105,18 @@ export class RecipeRecommendationsService {
         throw new Error('OPENAI_API_KEY not found in environment variables');
       }
       const openai = new OpenAI({ apiKey });
-      
+
       requestPayload = {
         model: 'gpt-3.5-turbo' as const,
         messages: [
           {
             role: 'system' as const,
-            content: `Sos una chef argentina experta en nutrición que crea recetas saludables, deliciosas y fáciles de seguir. Tus recetas deben ser prácticas, usar ingredientes accesibles y mantener la cultura gastronómica argentina.`
+            content: `Sos una chef argentina experta en nutrición que crea recetas saludables, deliciosas y fáciles de seguir. Tus recetas deben ser prácticas, usar ingredientes accesibles y mantener la cultura gastronómica argentina.`,
           },
           {
             role: 'user' as const,
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         max_tokens: 1200,
         temperature: 0.8,
@@ -108,7 +125,7 @@ export class RecipeRecommendationsService {
       const completion = await openai.chat.completions.create(requestPayload);
 
       const recipeResponse = completion.choices[0]?.message?.content;
-      
+
       if (!recipeResponse) {
         throw new Error('No recipe recommendations received from OpenAI');
       }
@@ -117,7 +134,7 @@ export class RecipeRecommendationsService {
       try {
         const cleanedResponse = this.stripMarkdownCodeBlocks(recipeResponse);
         const parsedRecipes = JSON.parse(cleanedResponse);
-        
+
         // Validate recipe structure
         if (!parsedRecipes.recipes || !Array.isArray(parsedRecipes.recipes)) {
           throw new Error('Invalid recipe response format');
@@ -126,17 +143,17 @@ export class RecipeRecommendationsService {
         // Store successful request data
         logEntry.recipes = parsedRecipes.recipes;
         logEntry.isSuccess = true;
-        
+
         // Store token usage for analytics
         if (completion.usage) {
           logEntry.promptTokens = completion.usage.prompt_tokens;
           logEntry.completionTokens = completion.usage.completion_tokens;
           logEntry.totalTokens = completion.usage.total_tokens;
         }
-        
+
         // Save log entry
         await this.recipeRecommendationLogRepository.save(logEntry);
-        
+
         // Deduct points for recipe recommendations
         try {
           await this.pointsService.spendPoints(
@@ -144,29 +161,37 @@ export class RecipeRecommendationsService {
             this.RECIPE_COST,
             ActivityType.RECIPE_RECOMMENDATION,
             'Recipe recommendations generated',
-            logEntry.id
+            logEntry.id,
           );
 
-          this.logger.log(`Deducted ${this.RECIPE_COST} points from user ${userId} for recipe recommendations`);
+          this.logger.log(
+            `Deducted ${this.RECIPE_COST} points from user ${userId} for recipe recommendations`,
+          );
         } catch (error) {
-          this.logger.error('Failed to deduct points for recipe recommendations:', error);
+          this.logger.error(
+            'Failed to deduct points for recipe recommendations:',
+            error,
+          );
           throw new Error('Failed to process points transaction');
         }
-        
+
         // Get updated points status
-        const updatedPointsStatus = await this.pointsService.getPointsStatus(userId);
-        
-        this.logger.log(`Recipe recommendations generated for user ${userId} with ${ingredients.length} ingredients`);
-        
+        const updatedPointsStatus =
+          await this.pointsService.getPointsStatus(userId);
+
+        this.logger.log(
+          `Recipe recommendations generated for user ${userId} with ${ingredients.length} ingredients`,
+        );
+
         return {
           recipes: parsedRecipes.recipes,
           pointsSpent: this.RECIPE_COST,
-          remainingPoints: updatedPointsStatus.totalPoints
+          remainingPoints: updatedPointsStatus.totalPoints,
         };
       } catch (parseError) {
         this.logger.error('Error parsing recipe JSON response:', parseError);
         this.logger.error('Raw OpenAI response:', recipeResponse);
-        
+
         // Store failed request data for debugging
         if (requestPayload) {
           logEntry.openaiRequest = requestPayload;
@@ -178,17 +203,18 @@ export class RecipeRecommendationsService {
         await this.recipeRecommendationLogRepository.save(logEntry);
         throw new Error('Invalid JSON response from OpenAI');
       }
-
     } catch (error) {
       this.logger.error('Error generating recipe recommendations:', error);
-      
+
       // Store failed request data for debugging
       if (requestPayload) {
         logEntry.openaiRequest = requestPayload;
       }
       logEntry.errorMessage = error.message;
       await this.recipeRecommendationLogRepository.save(logEntry);
-      throw new Error(`Error generating recipe recommendations: ${error.message}`);
+      throw new Error(
+        `Error generating recipe recommendations: ${error.message}`,
+      );
     }
   }
 
@@ -196,18 +222,19 @@ export class RecipeRecommendationsService {
     ingredients: string[],
     evaluationScore: number,
     evaluationIssues: string[],
-    customInstructions: string[] = []
+    customInstructions: string[] = [],
   ): string {
     const ingredientNames = ingredients.join(', ');
-    const issuesText = evaluationIssues.length > 0 ? evaluationIssues.join(', ') : 'ninguno';
-    
+    const issuesText =
+      evaluationIssues.length > 0 ? evaluationIssues.join(', ') : 'ninguno';
+
     // Build custom instructions section
     let customInstructionsText = '';
     if (customInstructions.length > 0) {
       customInstructionsText = `
 
 **INSTRUCCIONES PERSONALIZADAS DEL NUTRICIONISTA:**
-${customInstructions.map(instruction => `- ${instruction}`).join('\n')}
+${customInstructions.map((instruction) => `- ${instruction}`).join('\n')}
 
 IMPORTANTE: Estas instrucciones son específicas para este paciente y DEBEN ser seguidas estrictamente al crear las recetas. NO incluyas ingredientes que vayan contra estas instrucciones. Si las instrucciones mencionan evitar ciertos ingredientes, NO los uses en ninguna receta.`;
     }
@@ -246,14 +273,16 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
 
   async generateFromEvaluation(
     generateFromEvaluationDto: GenerateFromEvaluationDto,
-    userId: number
+    userId: number,
   ): Promise<RecipeRecommendationResponse> {
     const { ingredients, positives, improvements } = generateFromEvaluationDto;
-    
+
     // Check if user has enough points
     const pointsStatus = await this.pointsService.getPointsStatus(userId);
     if (pointsStatus.totalPoints < this.RECIPE_COST) {
-      throw new Error(`Insufficient points. You have ${pointsStatus.totalPoints} points, but need ${this.RECIPE_COST} points for recipe recommendations.`);
+      throw new Error(
+        `Insufficient points. You have ${pointsStatus.totalPoints} points, but need ${this.RECIPE_COST} points for recipe recommendations.`,
+      );
     }
 
     // Create initial log entry
@@ -270,9 +299,19 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
 
     try {
       // Get custom instructions for the user
-      const customInstructions = await this.customInstructionsService.getActiveInstructionsForUser(userId);
-      this.logger.log(`Found ${customInstructions.length} custom instructions for user ${userId}: ${customInstructions.join(', ')}`);
-      const prompt = this.buildRecipePromptFromEvaluation(ingredients, positives, improvements, customInstructions);
+      const customInstructions =
+        await this.customInstructionsService.getActiveInstructionsForUser(
+          userId,
+        );
+      this.logger.log(
+        `Found ${customInstructions.length} custom instructions for user ${userId}: ${customInstructions.join(', ')}`,
+      );
+      const prompt = this.buildRecipePromptFromEvaluation(
+        ingredients,
+        positives,
+        improvements,
+        customInstructions,
+      );
 
       // Instantiate OpenAI client
       const apiKey = this.configService.get<string>('OPENAI_API_KEY');
@@ -281,18 +320,18 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
         throw new Error('OPENAI_API_KEY not found in environment variables');
       }
       const openai = new OpenAI({ apiKey });
-      
+
       requestPayload = {
         model: 'gpt-3.5-turbo' as const,
         messages: [
           {
             role: 'system' as const,
-            content: `Sos una chef argentina experta en nutrición que crea recetas saludables, deliciosas y fáciles de seguir. Tus recetas deben ser prácticas, usar ingredientes accesibles y mantener la cultura gastronómica argentina.`
+            content: `Sos una chef argentina experta en nutrición que crea recetas saludables, deliciosas y fáciles de seguir. Tus recetas deben ser prácticas, usar ingredientes accesibles y mantener la cultura gastronómica argentina.`,
           },
           {
             role: 'user' as const,
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         max_tokens: 1200,
         temperature: 0.8,
@@ -301,7 +340,7 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
       const completion = await openai.chat.completions.create(requestPayload);
 
       const recipeResponse = completion.choices[0]?.message?.content;
-      
+
       if (!recipeResponse) {
         throw new Error('No recipe recommendations received from OpenAI');
       }
@@ -310,7 +349,7 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
       try {
         const cleanedResponse = this.stripMarkdownCodeBlocks(recipeResponse);
         const parsedRecipes = JSON.parse(cleanedResponse);
-        
+
         // Validate recipe structure
         if (!parsedRecipes.recipes || !Array.isArray(parsedRecipes.recipes)) {
           throw new Error('Invalid recipe response format');
@@ -319,17 +358,17 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
         // Store successful request data
         logEntry.recipes = parsedRecipes.recipes;
         logEntry.isSuccess = true;
-        
+
         // Store token usage for analytics
         if (completion.usage) {
           logEntry.promptTokens = completion.usage.prompt_tokens;
           logEntry.completionTokens = completion.usage.completion_tokens;
           logEntry.totalTokens = completion.usage.total_tokens;
         }
-        
+
         // Save log entry
         await this.recipeRecommendationLogRepository.save(logEntry);
-        
+
         // Deduct points for recipe recommendations
         try {
           await this.pointsService.spendPoints(
@@ -337,29 +376,37 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
             this.RECIPE_COST,
             ActivityType.RECIPE_RECOMMENDATION,
             'Recipe recommendations generated from evaluation',
-            logEntry.id
+            logEntry.id,
           );
 
-          this.logger.log(`Deducted ${this.RECIPE_COST} points from user ${userId} for recipe recommendations`);
+          this.logger.log(
+            `Deducted ${this.RECIPE_COST} points from user ${userId} for recipe recommendations`,
+          );
         } catch (error) {
-          this.logger.error('Failed to deduct points for recipe recommendations:', error);
+          this.logger.error(
+            'Failed to deduct points for recipe recommendations:',
+            error,
+          );
           throw new Error('Failed to process points transaction');
         }
-        
+
         // Get updated points status
-        const updatedPointsStatus = await this.pointsService.getPointsStatus(userId);
-        
-        this.logger.log(`Recipe recommendations generated for user ${userId} with ${ingredients.length} ingredients`);
-        
+        const updatedPointsStatus =
+          await this.pointsService.getPointsStatus(userId);
+
+        this.logger.log(
+          `Recipe recommendations generated for user ${userId} with ${ingredients.length} ingredients`,
+        );
+
         return {
           recipes: parsedRecipes.recipes,
           pointsSpent: this.RECIPE_COST,
-          remainingPoints: updatedPointsStatus.totalPoints
+          remainingPoints: updatedPointsStatus.totalPoints,
         };
       } catch (parseError) {
         this.logger.error('Error parsing recipe JSON response:', parseError);
         this.logger.error('Raw OpenAI response:', recipeResponse);
-        
+
         // Store failed request data for debugging
         if (requestPayload) {
           logEntry.openaiRequest = requestPayload;
@@ -371,17 +418,18 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
         await this.recipeRecommendationLogRepository.save(logEntry);
         throw new Error('Invalid JSON response from OpenAI');
       }
-
     } catch (error) {
       this.logger.error('Error generating recipe recommendations:', error);
-      
+
       // Store failed request data for debugging
       if (requestPayload) {
         logEntry.openaiRequest = requestPayload;
       }
       logEntry.errorMessage = error.message;
       await this.recipeRecommendationLogRepository.save(logEntry);
-      throw new Error(`Error generating recipe recommendations: ${error.message}`);
+      throw new Error(
+        `Error generating recipe recommendations: ${error.message}`,
+      );
     }
   }
 
@@ -389,19 +437,21 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
     ingredients: string[],
     positives: string[],
     improvements: string[],
-    customInstructions: string[] = []
+    customInstructions: string[] = [],
   ): string {
     const ingredientNames = ingredients.join(', ');
-    const positivesText = positives.length > 0 ? positives.join(', ') : 'ninguno identificado';
-    const improvementsText = improvements.length > 0 ? improvements.join(', ') : 'ninguno';
-    
+    const positivesText =
+      positives.length > 0 ? positives.join(', ') : 'ninguno identificado';
+    const improvementsText =
+      improvements.length > 0 ? improvements.join(', ') : 'ninguno';
+
     // Build custom instructions section
     let customInstructionsText = '';
     if (customInstructions.length > 0) {
       customInstructionsText = `
 
 **INSTRUCCIONES PERSONALIZADAS DEL NUTRICIONISTA:**
-${customInstructions.map(instruction => `- ${instruction}`).join('\n')}
+${customInstructions.map((instruction) => `- ${instruction}`).join('\n')}
 
 IMPORTANTE: Estas instrucciones son específicas para este paciente y DEBEN ser seguidas estrictamente al crear las recetas. NO incluyas ingredientes que vayan contra estas instrucciones. Si las instrucciones mencionan evitar ciertos ingredientes, NO los uses en ninguna receta.`;
     }
@@ -440,32 +490,47 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
   }
 
   async getRecipeRecommendationHistory(userId: number): Promise<any[]> {
-    this.logger.log(`Fetching recipe recommendation history for user ${userId}`);
-    
+    this.logger.log(
+      `Fetching recipe recommendation history for user ${userId}`,
+    );
+
     const logs = await this.recipeRecommendationLogRepository.find({
       where: { user: { id: userId }, isSuccess: true },
       order: { createdAt: 'DESC' },
       take: 20, // Limit to last 20 recommendations
-      select: ['id', 'plateEvaluationId', 'ingredients', 'evaluationScore', 'recipes', 'pointsSpent', 'createdAt']
+      select: [
+        'id',
+        'plateEvaluationId',
+        'ingredients',
+        'evaluationScore',
+        'recipes',
+        'pointsSpent',
+        'createdAt',
+      ],
     });
 
-    return logs.map(log => ({
+    return logs.map((log) => ({
       id: log.id,
       plateEvaluationId: log.plateEvaluationId,
       ingredients: log.ingredients,
       evaluationScore: log.evaluationScore,
       recipes: log.recipes,
       pointsSpent: log.pointsSpent,
-      createdAt: log.createdAt
+      createdAt: log.createdAt,
     }));
   }
 
-  async getPatientRecipeRecommendations(patientId: number, includeHidden: boolean = false): Promise<any[]> {
-    this.logger.log(`Fetching recipe recommendations for patient ${patientId}, includeHidden: ${includeHidden}`);
-    
-    const whereCondition: any = { 
-      user: { id: patientId }, 
-      isSuccess: true 
+  async getPatientRecipeRecommendations(
+    patientId: number,
+    includeHidden: boolean = false,
+  ): Promise<any[]> {
+    this.logger.log(
+      `Fetching recipe recommendations for patient ${patientId}, includeHidden: ${includeHidden}`,
+    );
+
+    const whereCondition: any = {
+      user: { id: patientId },
+      isSuccess: true,
     };
 
     if (!includeHidden) {
@@ -476,12 +541,19 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
       where: whereCondition,
       order: { createdAt: 'DESC' },
       select: [
-        'id', 'plateEvaluationId', 'ingredients', 'evaluationScore', 
-        'evaluationIssues', 'recipes', 'pointsSpent', 'isHiddenFromNutritionist', 'createdAt'
-      ]
+        'id',
+        'plateEvaluationId',
+        'ingredients',
+        'evaluationScore',
+        'evaluationIssues',
+        'recipes',
+        'pointsSpent',
+        'isHiddenFromNutritionist',
+        'createdAt',
+      ],
     });
 
-    return logs.map(log => ({
+    return logs.map((log) => ({
       id: log.id,
       plateEvaluationId: log.plateEvaluationId,
       ingredients: log.ingredients,
@@ -490,15 +562,20 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
       recipes: log.recipes,
       pointsSpent: log.pointsSpent,
       isHiddenFromNutritionist: log.isHiddenFromNutritionist,
-      createdAt: log.createdAt
+      createdAt: log.createdAt,
     }));
   }
 
-  async toggleNutritionistHideRecipe(logId: number, nutritionistId: number): Promise<{ success: boolean; isHidden: boolean }> {
-    this.logger.log(`Toggling nutritionist hide status for recipe recommendation ${logId} by nutritionist ${nutritionistId}`);
-    
+  async toggleNutritionistHideRecipe(
+    logId: number,
+    nutritionistId: number,
+  ): Promise<{ success: boolean; isHidden: boolean }> {
+    this.logger.log(
+      `Toggling nutritionist hide status for recipe recommendation ${logId} by nutritionist ${nutritionistId}`,
+    );
+
     const logEntry = await this.recipeRecommendationLogRepository.findOne({
-      where: { id: logId }
+      where: { id: logId },
     });
 
     if (!logEntry) {
@@ -510,7 +587,7 @@ Responde ÚNICAMENTE en formato JSON, sin explicaciones adicionales.`;
 
     return {
       success: true,
-      isHidden: logEntry.isHiddenFromNutritionist
+      isHidden: logEntry.isHiddenFromNutritionist,
     };
   }
 }

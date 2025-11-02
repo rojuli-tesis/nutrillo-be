@@ -68,15 +68,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
     const user = await this.userService.getUserById(req.user.userId);
-    const pointsStatus = await this.pointsService.getPointsStatus(req.user.userId);
-    
-    return { 
-      id: req.user.userId, 
+    const pointsStatus = await this.pointsService.getPointsStatus(
+      req.user.userId,
+    );
+
+    return {
+      id: req.user.userId,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       isActive: user.isActive,
-      points: pointsStatus.totalPoints
+      points: pointsStatus.totalPoints,
     };
   }
 

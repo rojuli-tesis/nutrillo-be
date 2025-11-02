@@ -10,4 +10,3 @@ export class RecipeResponseDto {
   nutritionalBenefits: string[];
   createdAt: Date;
 }
-

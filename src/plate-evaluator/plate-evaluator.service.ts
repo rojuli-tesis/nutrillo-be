@@ -28,17 +28,20 @@ export class PlateEvaluatorService {
     private customInstructionsService: CustomInstructionsService,
   ) {}
 
-  async evaluatePlate(evaluatePlateDto: EvaluatePlateDto, userId: number): Promise<PlateEvaluation> {
+  async evaluatePlate(
+    evaluatePlateDto: EvaluatePlateDto,
+    userId: number,
+  ): Promise<PlateEvaluation> {
     const { ingredients } = evaluatePlateDto;
     this.logger.log(`Starting plate evaluation for user ID: ${userId}`);
-    
+
     // Create initial log entry
     const logEntry = this.plateEvaluationLogRepository.create({
       user: { id: userId } as User,
-      ingredients: ingredients.map(ing => ({
+      ingredients: ingredients.map((ing) => ({
         name: ing.name,
         type: ing.type,
-        subtype: ing.subtype
+        subtype: ing.subtype,
       })),
       isSuccess: false,
     });
@@ -51,9 +54,17 @@ export class PlateEvaluatorService {
       }
 
       // Get custom instructions for the user
-      const customInstructions = await this.customInstructionsService.getActiveInstructionsForUser(userId);
-      this.logger.log(`Found ${customInstructions.length} custom instructions for user ${userId}: ${customInstructions.join(', ')}`);
-      const prompt = this.buildEvaluationPrompt(ingredients, customInstructions);
+      const customInstructions =
+        await this.customInstructionsService.getActiveInstructionsForUser(
+          userId,
+        );
+      this.logger.log(
+        `Found ${customInstructions.length} custom instructions for user ${userId}: ${customInstructions.join(', ')}`,
+      );
+      const prompt = this.buildEvaluationPrompt(
+        ingredients,
+        customInstructions,
+      );
       this.logger.log(`Generated prompt with custom instructions: ${prompt}`);
 
       // Instantiate OpenAI client only when needed
@@ -63,18 +74,18 @@ export class PlateEvaluatorService {
         throw new Error('OPENAI_API_KEY not found in environment variables');
       }
       const openai = new OpenAI({ apiKey });
-      
+
       requestPayload = {
         model: 'gpt-3.5-turbo' as const,
         messages: [
           {
             role: 'system' as const,
-            content: `Sos una nutricionista argentina que analiza platos de comida de forma clara, práctica y educativa.`
+            content: `Sos una nutricionista argentina que analiza platos de comida de forma clara, práctica y educativa.`,
           },
           {
             role: 'user' as const,
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         max_tokens: 800,
         temperature: 0.7,
@@ -83,7 +94,7 @@ export class PlateEvaluatorService {
       const completion = await openai.chat.completions.create(requestPayload);
 
       const evaluation = completion.choices[0]?.message?.content;
-      
+
       if (!evaluation) {
         throw new Error('No evaluation received from OpenAI');
       }
@@ -91,52 +102,61 @@ export class PlateEvaluatorService {
       // Parse JSON response
       try {
         const parsedEvaluation = JSON.parse(evaluation);
-        
+
         // For successful requests, store only essential data (not full payload/response)
         logEntry.score = parsedEvaluation.score;
         logEntry.positives = parsedEvaluation.positives;
         logEntry.issues = parsedEvaluation.issues;
         logEntry.suggestions = parsedEvaluation.suggestions;
         logEntry.isSuccess = true;
-        
+
         // Store token usage for analytics (without storing full response)
         if (completion.usage) {
           logEntry.promptTokens = completion.usage.prompt_tokens;
           logEntry.completionTokens = completion.usage.completion_tokens;
           logEntry.totalTokens = completion.usage.total_tokens;
         }
-        
+
         // Save log entry
-        const savedLogEntry = await this.plateEvaluationLogRepository.save(logEntry);
-        
+        const savedLogEntry =
+          await this.plateEvaluationLogRepository.save(logEntry);
+
         // Award points for plate evaluation
         try {
-          const pointsResult = await this.pointsService.awardPlateEvaluationPoints(
-            userId,
-            parsedEvaluation.score,
-            savedLogEntry.id
-          );
+          const pointsResult =
+            await this.pointsService.awardPlateEvaluationPoints(
+              userId,
+              parsedEvaluation.score,
+              savedLogEntry.id,
+            );
 
           // Update the log entry with points information
           await this.plateEvaluationLogRepository.update(savedLogEntry.id, {
             pointsEarned: pointsResult.pointsEarned,
-            streakMultiplier: pointsResult.multiplier
+            streakMultiplier: pointsResult.multiplier,
           });
 
-          this.logger.log(`Awarded ${pointsResult.pointsEarned} points to user ${userId} for plate evaluation`);
+          this.logger.log(
+            `Awarded ${pointsResult.pointsEarned} points to user ${userId} for plate evaluation`,
+          );
         } catch (error) {
-          this.logger.error('Failed to award points for plate evaluation:', error);
+          this.logger.error(
+            'Failed to award points for plate evaluation:',
+            error,
+          );
           // Don't fail the evaluation if points awarding fails
         }
-        
-        this.logger.log(`Plate evaluation completed for ${ingredients.length} ingredients for user ${userId}`);
+
+        this.logger.log(
+          `Plate evaluation completed for ${ingredients.length} ingredients for user ${userId}`,
+        );
         return {
           ...parsedEvaluation,
-          evaluationId: logEntry.id
+          evaluationId: logEntry.id,
         };
       } catch (parseError) {
         this.logger.error('Error parsing JSON response:', parseError);
-        
+
         // For failed requests, store full request/response for debugging
         if (requestPayload) {
           logEntry.openaiRequest = requestPayload;
@@ -148,10 +168,9 @@ export class PlateEvaluatorService {
         await this.plateEvaluationLogRepository.save(logEntry);
         throw new Error('Invalid JSON response from OpenAI');
       }
-
     } catch (error) {
       this.logger.error('Error evaluating plate:', error);
-      
+
       // For failed requests, store full request for debugging
       if (requestPayload) {
         logEntry.openaiRequest = requestPayload;
@@ -162,16 +181,19 @@ export class PlateEvaluatorService {
     }
   }
 
-  private buildEvaluationPrompt(ingredients: any[], customInstructions: string[] = []): string {
-    const ingredientNames = ingredients.map(ing => ing.name).join(', ');
-    
+  private buildEvaluationPrompt(
+    ingredients: any[],
+    customInstructions: string[] = [],
+  ): string {
+    const ingredientNames = ingredients.map((ing) => ing.name).join(', ');
+
     // Build custom instructions section
     let customInstructionsText = '';
     if (customInstructions.length > 0) {
       customInstructionsText = `
 
 INSTRUCCIONES PERSONALIZADAS DEL NUTRICIONISTA:
-${customInstructions.map(instruction => `- ${instruction}`).join('\n')}
+${customInstructions.map((instruction) => `- ${instruction}`).join('\n')}
 
 IMPORTANTE: Estas instrucciones son específicas para este paciente y DEBEN ser consideradas al evaluar el plato. Si algún ingrediente o combinación va contra estas instrucciones, debes:
 1. Reducir significativamente la puntuación
@@ -195,64 +217,89 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
 
   async getEvaluationHistory(userId: number): Promise<any[]> {
     this.logger.log(`Fetching evaluation history for user ${userId}`);
-    
+
     const logs = await this.plateEvaluationLogRepository.find({
       where: { user: { id: userId }, isSuccess: true },
       order: { createdAt: 'DESC' },
       take: 50, // Limit to last 50 evaluations
-      select: ['id', 'ingredients', 'score', 'positives', 'issues', 'suggestions', 'isVisibleToUser', 'createdAt']
+      select: [
+        'id',
+        'ingredients',
+        'score',
+        'positives',
+        'issues',
+        'suggestions',
+        'isVisibleToUser',
+        'createdAt',
+      ],
     });
 
     // Return in the same format as before for frontend compatibility
-    return logs.map(log => ({
+    return logs.map((log) => ({
       id: log.id,
       ingredients: log.ingredients,
       evaluation: {
         score: log.score,
         positives: log.positives,
         issues: log.issues,
-        suggestions: log.suggestions
+        suggestions: log.suggestions,
       },
       isVisibleToUser: log.isVisibleToUser,
-      createdAt: log.createdAt
+      createdAt: log.createdAt,
     }));
   }
 
   async getFavoriteEvaluations(userId: number): Promise<any[]> {
     this.logger.log(`Fetching favorite evaluations for user ${userId}`);
-    
+
     const logs = await this.plateEvaluationLogRepository.find({
-      where: { 
-        user: { id: userId }, 
-        isSuccess: true, 
-        isVisibleToUser: true 
+      where: {
+        user: { id: userId },
+        isSuccess: true,
+        isVisibleToUser: true,
       },
       order: { updatedAt: 'DESC' },
-      select: ['id', 'ingredients', 'score', 'positives', 'issues', 'suggestions', 'userNotes', 'nutritionistNotes', 'createdAt', 'updatedAt']
+      select: [
+        'id',
+        'ingredients',
+        'score',
+        'positives',
+        'issues',
+        'suggestions',
+        'userNotes',
+        'nutritionistNotes',
+        'createdAt',
+        'updatedAt',
+      ],
     });
 
     // Return in the same format as before for frontend compatibility
-    return logs.map(log => ({
+    return logs.map((log) => ({
       id: log.id,
       ingredients: log.ingredients,
       evaluation: {
         score: log.score,
         positives: log.positives,
         issues: log.issues,
-        suggestions: log.suggestions
+        suggestions: log.suggestions,
       },
       userNotes: log.userNotes,
       nutritionistNotes: log.nutritionistNotes,
       createdAt: log.createdAt,
-      updatedAt: log.updatedAt
+      updatedAt: log.updatedAt,
     }));
   }
 
-  async toggleFavorite(logId: number, userId: number): Promise<ToggleFavoriteResponseDto> {
-    this.logger.log(`Toggling favorite status for evaluation ${logId} by user ${userId}`);
-    
+  async toggleFavorite(
+    logId: number,
+    userId: number,
+  ): Promise<ToggleFavoriteResponseDto> {
+    this.logger.log(
+      `Toggling favorite status for evaluation ${logId} by user ${userId}`,
+    );
+
     const logEntry = await this.plateEvaluationLogRepository.findOne({
-      where: { id: logId, user: { id: userId } }
+      where: { id: logId, user: { id: userId } },
     });
 
     if (!logEntry) {
@@ -264,16 +311,21 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
 
     return {
       success: true,
-      isVisibleToUser: logEntry.isVisibleToUser
+      isVisibleToUser: logEntry.isVisibleToUser,
     };
   }
 
-  async getPatientEvaluations(patientId: number, includeHidden: boolean = false): Promise<any[]> {
-    this.logger.log(`Fetching plate evaluations for patient ${patientId}, includeHidden: ${includeHidden}`);
-    
-    const whereCondition: any = { 
-      user: { id: patientId }, 
-      isSuccess: true 
+  async getPatientEvaluations(
+    patientId: number,
+    includeHidden: boolean = false,
+  ): Promise<any[]> {
+    this.logger.log(
+      `Fetching plate evaluations for patient ${patientId}, includeHidden: ${includeHidden}`,
+    );
+
+    const whereCondition: any = {
+      user: { id: patientId },
+      isSuccess: true,
     };
 
     if (!includeHidden) {
@@ -284,13 +336,23 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
       where: whereCondition,
       order: { createdAt: 'DESC' },
       select: [
-        'id', 'ingredients', 'score', 'positives', 'issues', 'suggestions', 
-        'userNotes', 'nutritionistNotes', 'isVisibleToUser', 'isHiddenFromNutritionist', 
-        'pointsEarned', 'createdAt', 'updatedAt'
-      ]
+        'id',
+        'ingredients',
+        'score',
+        'positives',
+        'issues',
+        'suggestions',
+        'userNotes',
+        'nutritionistNotes',
+        'isVisibleToUser',
+        'isHiddenFromNutritionist',
+        'pointsEarned',
+        'createdAt',
+        'updatedAt',
+      ],
     });
 
-    return logs.map(log => ({
+    return logs.map((log) => ({
       id: log.id,
       ingredients: log.ingredients,
       score: log.score,
@@ -303,17 +365,22 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
       nutritionistNotes: log.nutritionistNotes,
       pointsEarned: log.pointsEarned,
       createdAt: log.createdAt,
-      updatedAt: log.updatedAt
+      updatedAt: log.updatedAt,
     }));
   }
 
-  async toggleNutritionistHide(logId: number, nutritionistId: number): Promise<{ success: boolean; isHidden: boolean }> {
-    this.logger.log(`Toggling nutritionist hide status for evaluation ${logId} by nutritionist ${nutritionistId}`);
-    
+  async toggleNutritionistHide(
+    logId: number,
+    nutritionistId: number,
+  ): Promise<{ success: boolean; isHidden: boolean }> {
+    this.logger.log(
+      `Toggling nutritionist hide status for evaluation ${logId} by nutritionist ${nutritionistId}`,
+    );
+
     // Note: In a real implementation, you might want to verify that the nutritionist
     // has permission to view this patient's data
     const logEntry = await this.plateEvaluationLogRepository.findOne({
-      where: { id: logId }
+      where: { id: logId },
     });
 
     if (!logEntry) {
@@ -325,15 +392,21 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
 
     return {
       success: true,
-      isHidden: logEntry.isHiddenFromNutritionist
+      isHidden: logEntry.isHiddenFromNutritionist,
     };
   }
 
-  async updateNutritionistNotes(logId: number, nutritionistId: number, notes: string): Promise<{ success: boolean; notes: string }> {
-    this.logger.log(`Updating nutritionist notes for evaluation ${logId} by nutritionist ${nutritionistId}`);
-    
+  async updateNutritionistNotes(
+    logId: number,
+    nutritionistId: number,
+    notes: string,
+  ): Promise<{ success: boolean; notes: string }> {
+    this.logger.log(
+      `Updating nutritionist notes for evaluation ${logId} by nutritionist ${nutritionistId}`,
+    );
+
     const logEntry = await this.plateEvaluationLogRepository.findOne({
-      where: { id: logId }
+      where: { id: logId },
     });
 
     if (!logEntry) {
@@ -345,7 +418,7 @@ Devolvé SOLO el JSON. No agregues comentarios ni texto fuera de la estructura.`
 
     return {
       success: true,
-      notes: logEntry.nutritionistNotes
+      notes: logEntry.nutritionistNotes,
     };
   }
-} 
+}

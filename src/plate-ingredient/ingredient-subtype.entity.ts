@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { IngredientType } from './ingredient-type.entity';
 
 @Entity('ingredient_subtype')
@@ -18,7 +24,7 @@ export class IngredientSubtype {
   @Column({ name: 'type_id' })
   type_id: number;
 
-  @ManyToOne(() => IngredientType, type => type.subtypes)
+  @ManyToOne(() => IngredientType, (type) => type.subtypes)
   @JoinColumn({ name: 'type_id' })
   type: IngredientType;
-} 
+}

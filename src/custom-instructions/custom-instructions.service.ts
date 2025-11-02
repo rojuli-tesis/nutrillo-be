@@ -16,7 +16,7 @@ export class CustomInstructionsService {
 
   async create(
     createCustomInstructionsDto: CreateCustomInstructionsDto,
-    userId: number
+    userId: number,
   ): Promise<CustomInstructionsResponseDto> {
     this.logger.log(`Creating custom instructions for user ${userId}`);
 
@@ -25,10 +25,13 @@ export class CustomInstructionsService {
       user: { id: userId } as any,
     });
 
-    const saved = await this.customInstructionsRepository.save(customInstructions);
-    
-    this.logger.log(`Created custom instructions ${saved.id} for user ${userId}`);
-    
+    const saved =
+      await this.customInstructionsRepository.save(customInstructions);
+
+    this.logger.log(
+      `Created custom instructions ${saved.id} for user ${userId}`,
+    );
+
     return this.mapToResponseDto(saved);
   }
 
@@ -40,7 +43,9 @@ export class CustomInstructionsService {
       order: { priority: 'DESC', createdAt: 'DESC' },
     });
 
-    return instructions.map(instruction => this.mapToResponseDto(instruction));
+    return instructions.map((instruction) =>
+      this.mapToResponseDto(instruction),
+    );
   }
 
   async findActive(userId: number): Promise<CustomInstructionsResponseDto[]> {
@@ -51,10 +56,15 @@ export class CustomInstructionsService {
       order: { priority: 'DESC', createdAt: 'DESC' },
     });
 
-    return instructions.map(instruction => this.mapToResponseDto(instruction));
+    return instructions.map((instruction) =>
+      this.mapToResponseDto(instruction),
+    );
   }
 
-  async findOne(id: number, userId: number): Promise<CustomInstructionsResponseDto> {
+  async findOne(
+    id: number,
+    userId: number,
+  ): Promise<CustomInstructionsResponseDto> {
     this.logger.log(`Fetching custom instructions ${id} for user ${userId}`);
 
     const instruction = await this.customInstructionsRepository.findOne({
@@ -71,7 +81,7 @@ export class CustomInstructionsService {
   async update(
     id: number,
     updateCustomInstructionsDto: UpdateCustomInstructionsDto,
-    userId: number
+    userId: number,
   ): Promise<CustomInstructionsResponseDto> {
     this.logger.log(`Updating custom instructions ${id} for user ${userId}`);
 
@@ -85,9 +95,9 @@ export class CustomInstructionsService {
 
     Object.assign(instruction, updateCustomInstructionsDto);
     const updated = await this.customInstructionsRepository.save(instruction);
-    
+
     this.logger.log(`Updated custom instructions ${id} for user ${userId}`);
-    
+
     return this.mapToResponseDto(updated);
   }
 
@@ -115,14 +125,22 @@ export class CustomInstructionsService {
       select: ['instructions'],
     });
 
-    this.logger.log(`Found ${instructions.length} active instructions in database for user ${userId}`);
-    const instructionTexts = instructions.map(instruction => instruction.instructions);
-    this.logger.log(`Returning instruction texts: ${JSON.stringify(instructionTexts)}`);
-    
+    this.logger.log(
+      `Found ${instructions.length} active instructions in database for user ${userId}`,
+    );
+    const instructionTexts = instructions.map(
+      (instruction) => instruction.instructions,
+    );
+    this.logger.log(
+      `Returning instruction texts: ${JSON.stringify(instructionTexts)}`,
+    );
+
     return instructionTexts;
   }
 
-  private mapToResponseDto(instruction: CustomInstructions): CustomInstructionsResponseDto {
+  private mapToResponseDto(
+    instruction: CustomInstructions,
+  ): CustomInstructionsResponseDto {
     return {
       id: instruction.id,
       instructions: instruction.instructions,

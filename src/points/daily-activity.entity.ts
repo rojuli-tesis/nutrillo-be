@@ -1,10 +1,18 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn, CreateDateColumn, Index } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  JoinColumn,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
 import { User } from '../user/user.entity';
 
 export enum ActivityType {
   MEAL_LOG = 'meal_log',
   PLATE_EVALUATION = 'plate_evaluation',
-  BOTH = 'both'
+  BOTH = 'both',
 }
 
 @Entity('daily_activity')
@@ -23,7 +31,7 @@ export class DailyActivity {
   @Column({
     type: 'enum',
     enum: ActivityType,
-    nullable: false
+    nullable: false,
   })
   activityType: ActivityType;
 
@@ -42,4 +50,3 @@ export class DailyActivity {
   @CreateDateColumn()
   createdAt: Date;
 }
-

@@ -7,10 +7,7 @@ import { DatabaseModule } from '../database/database.module';
 @Module({
   imports: [DatabaseModule],
   controllers: [CustomInstructionsController],
-  providers: [
-    CustomInstructionsService,
-    ...customInstructionsProviders,
-  ],
+  providers: [CustomInstructionsService, ...customInstructionsProviders],
   exports: [CustomInstructionsService],
 })
 export class CustomInstructionsModule {}

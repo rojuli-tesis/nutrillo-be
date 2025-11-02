@@ -1,4 +1,12 @@
-import { IsString, IsOptional, IsObject, IsBoolean, IsArray, IsNumber, IsInt } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsObject,
+  IsBoolean,
+  IsArray,
+  IsNumber,
+  IsInt,
+} from 'class-validator';
 
 export class NutrientsDto {
   @IsOptional()
@@ -90,4 +98,4 @@ export class PlateIngredientResponseDto extends PlateIngredientDto {
   };
   createdAt: Date;
   updatedAt: Date;
-} 
+}

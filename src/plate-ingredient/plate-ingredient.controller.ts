@@ -1,10 +1,21 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseInterceptors, UploadedFile, ParseIntPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  UseInterceptors,
+  UploadedFile,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PlateIngredientService } from './plate-ingredient.service';
 import { IngredientTypeService } from './ingredient-type.service';
 import { IngredientSubtypeService } from './ingredient-subtype.service';
 import { IngredientTypeEnum } from './ingredient-type.enum';
-import type { Multer } from 'multer';
 
 @Controller('plate-ingredient')
 export class PlateIngredientController {
@@ -39,7 +50,10 @@ export class PlateIngredientController {
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  async create(@Body() formData: any, @UploadedFile() file: Express.Multer.File) {
+  async create(
+    @Body() formData: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     // Parse nested objects from form data
     const data = {
       ...formData,
@@ -77,4 +91,4 @@ export class PlateIngredientController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.plateIngredientService.remove(id);
   }
-} 
+}

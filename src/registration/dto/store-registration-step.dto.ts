@@ -1,6 +1,12 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsObject, ValidateNested } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsObject,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { RegistrationStep, RegistrationSteps } from '../schemas/registration.schema';
+import { RegistrationStep } from '../schemas/registration.schema';
 
 export class StoreRegistrationStepDto {
   @IsNotEmpty()

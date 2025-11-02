@@ -1,9 +1,17 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../user/user.entity';
 
 export enum StreakType {
   MEAL_LOGGING = 'meal_logging',
-  PLATE_BUILDER = 'plate_builder'
+  PLATE_BUILDER = 'plate_builder',
 }
 
 @Entity('user_streaks')
@@ -18,7 +26,7 @@ export class UserStreaks {
   @Column({
     type: 'enum',
     enum: StreakType,
-    nullable: false
+    nullable: false,
   })
   streakType: StreakType;
 

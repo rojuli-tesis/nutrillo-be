@@ -56,7 +56,10 @@ export class InviteController {
   }
 
   @Patch(':id/revoke')
-  async revoke(@Param('id') id: number, @Request() req: Express.Request & { user: JwtUser }) {
+  async revoke(
+    @Param('id') id: number,
+    @Request() req: Express.Request & { user: JwtUser },
+  ) {
     return await this.inviteService.revokeInvite(id, req.user.userId);
   }
 

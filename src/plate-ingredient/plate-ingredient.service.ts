@@ -41,26 +41,29 @@ export class PlateIngredientService {
       return this.plateIngredientRepository.find({
         where: { type: { id: typeId } },
         relations: ['type', 'subtype'],
-        order: { name: 'ASC' }
+        order: { name: 'ASC' },
       });
     }
     return this.plateIngredientRepository.find({
       relations: ['type', 'subtype'],
-      order: { name: 'ASC' }
+      order: { name: 'ASC' },
     });
   }
 
   findOne(id: number): Promise<PlateIngredient> {
     return this.plateIngredientRepository.findOne({
       where: { id },
-      relations: ['type', 'subtype']
+      relations: ['type', 'subtype'],
     });
   }
 
-  async create(data: PlateIngredientInput, file?: Express.Multer.File): Promise<PlateIngredient> {
+  async create(
+    data: PlateIngredientInput,
+    file?: Express.Multer.File,
+  ): Promise<PlateIngredient> {
     const { typeId, ...ingredientData } = data;
     const ingredient = this.plateIngredientRepository.create(ingredientData);
-    
+
     if (typeId) {
       const type = await this.ingredientTypeService.findOne(typeId);
       if (type) {
@@ -70,20 +73,27 @@ export class PlateIngredientService {
 
     // Handle file upload if present
     if (file) {
-      ingredient.imageUrl = await this.s3Service.uploadFile(file, 'ingredients');
+      ingredient.imageUrl = await this.s3Service.uploadFile(
+        file,
+        'ingredients',
+      );
     } else {
       // Set a default image URL if no file is provided
-      ingredient.imageUrl = 'https://nutrillo-test2.s3.us-east-2.amazonaws.com/ingredients/default-ingredient.png';
-      
+      ingredient.imageUrl =
+        'https://nutrillo-test2.s3.us-east-2.amazonaws.com/ingredients/default-ingredient.png';
     }
-    
+
     return this.plateIngredientRepository.save(ingredient);
   }
 
-  async update(id: number, data: PlateIngredientInput, file?: Express.Multer.File): Promise<PlateIngredient> {
+  async update(
+    id: number,
+    data: PlateIngredientInput,
+    file?: Express.Multer.File,
+  ): Promise<PlateIngredient> {
     const { typeId, ...ingredientData } = data;
     const ingredient = await this.findOne(id);
-    
+
     if (!ingredient) {
       throw new Error(`Ingredient with id ${id} not found`);
     }
@@ -97,7 +107,10 @@ export class PlateIngredientService {
 
     // Handle file upload if present
     if (file) {
-      ingredient.imageUrl = await this.s3Service.uploadFile(file, 'ingredients');
+      ingredient.imageUrl = await this.s3Service.uploadFile(
+        file,
+        'ingredients',
+      );
     }
 
     // Update basic properties
@@ -108,21 +121,21 @@ export class PlateIngredientService {
     if (ingredientData.nutrients) {
       ingredient.nutrients = {
         ...ingredient.nutrients,
-        ...ingredientData.nutrients
+        ...ingredientData.nutrients,
       };
     }
 
     if (ingredientData.dietary) {
       ingredient.dietary = {
         ...ingredient.dietary,
-        ...ingredientData.dietary
+        ...ingredientData.dietary,
       };
     }
 
     if (ingredientData.metadata) {
       ingredient.metadata = {
         ...ingredient.metadata,
-        ...ingredientData.metadata
+        ...ingredientData.metadata,
       };
     }
 
@@ -133,4 +146,4 @@ export class PlateIngredientService {
   async remove(id: number): Promise<void> {
     await this.plateIngredientRepository.delete(id);
   }
-} 
+}

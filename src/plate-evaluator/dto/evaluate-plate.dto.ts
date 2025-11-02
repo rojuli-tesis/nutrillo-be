@@ -19,4 +19,4 @@ export class EvaluatePlateDto {
   @ValidateNested({ each: true })
   @Type(() => IngredientDto)
   ingredients: IngredientDto[];
-} 
+}

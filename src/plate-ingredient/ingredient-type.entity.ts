@@ -10,7 +10,7 @@ export class IngredientType {
   @Column({
     type: 'enum',
     enum: IngredientTypeEnum,
-    unique: true
+    unique: true,
   })
   name: IngredientTypeEnum;
 
@@ -23,6 +23,6 @@ export class IngredientType {
   @Column({ nullable: true })
   color: string;
 
-  @OneToMany(() => IngredientSubtype, subtype => subtype.type)
+  @OneToMany(() => IngredientSubtype, (subtype) => subtype.type)
   subtypes: IngredientSubtype[];
-} 
+}

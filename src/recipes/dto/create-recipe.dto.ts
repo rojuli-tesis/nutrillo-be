@@ -1,4 +1,11 @@
-import { IsString, IsArray, IsEnum, IsNotEmpty, ArrayMinSize, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  ArrayMinSize,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateRecipeDto {
   @IsString()
@@ -31,4 +38,3 @@ export class CreateRecipeDto {
   @IsString({ each: true })
   nutritionalBenefits: string[];
 }
-
