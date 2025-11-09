@@ -19,13 +19,21 @@ import { CustomInstructionsModule } from './custom-instructions/custom-instructi
 import { UserPlanModule } from './user-plans/user-plan.module';
 import { AppController } from './app.controller';
 
-const envFilePath = `.env.${process.env.NODE_ENV}` || '.env.development';
+// Docker Compose loads .production.env via env_file into process.env
+// ConfigModule will automatically use process.env variables
+// Only specify envFilePath if the file exists (optional, since Docker provides env vars)
+const nodeEnv = process.env.NODE_ENV || 'development';
+const envFilePath = `.${nodeEnv}.env`; // .production.env or .development.env
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      // envFilePath is optional - Docker Compose already loads vars to process.env
+      // But we include it for local development
       envFilePath: envFilePath,
       isGlobal: true,
+      // Ensure we read from process.env even if file doesn't exist
+      ignoreEnvFile: false,
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
